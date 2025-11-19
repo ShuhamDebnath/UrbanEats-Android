@@ -38,7 +38,7 @@ This project adheres to **Modern Android Development (MAD)** guidelines.
 | ![Home](url) | ![Detail](url) | ![Cart](url) | ![Dark](url) |
 
 ## 🏗 Setup & Installation
-1. Clone the repo: `git clone https://github.com/yourusername/UrbanEats-Android.git`
+1. Clone the repo: `git clone https://github.com/ShuhamDebnath/UrbanEats-Android.git`
 2. Add your `local.properties` file with API keys.
 3. Build and Run.
 
