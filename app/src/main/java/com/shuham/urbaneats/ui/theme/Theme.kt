@@ -1,4 +1,4 @@
-package com.example.urbaneats.ui.theme
+package com.shuham.urbaneats.ui.theme
 
 import android.app.Activity
 import android.os.Build
