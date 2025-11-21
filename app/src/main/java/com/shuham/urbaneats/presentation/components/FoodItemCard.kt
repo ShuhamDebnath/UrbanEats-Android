@@ -34,11 +34,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.shuham.urbaneats.domain.model.FoodProduct
+import com.shuham.urbaneats.domain.model.Product
 
 @Composable
 fun FoodItemCard(
-    foodProduct: FoodProduct,
+    product: Product,
     onAddClick: () -> Unit, // Pass the click event up!
     modifier: Modifier = Modifier
 ) {
@@ -52,13 +52,21 @@ fun FoodItemCard(
     ) {
         Column {
             // Image + Rating Badge Box
-            Box(modifier = Modifier.height(180.dp).fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .height(180.dp)
+                    .fillMaxWidth()
+            ) {
                 AsyncImage(
-                    model = foodProduct.imageUrl,
-                    contentDescription = foodProduct.name,
+                    model = product.imageUrl,
+                    contentDescription = product.name,
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)), // Clip top corners
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 12.dp, topEnd = 12.dp
+                            )
+                        ), // Clip top corners
                     contentScale = ContentScale.Crop
                 )
 
@@ -80,7 +88,7 @@ fun FoodItemCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "${foodProduct.rating}",
+                            text = "${product.rating}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -96,7 +104,7 @@ fun FoodItemCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = foodProduct.name,
+                        text = product.name,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f) // Pushes button to the right
@@ -111,14 +119,13 @@ fun FoodItemCard(
                         )
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Add,
-                            contentDescription = "Add to Cart"
+                            imageVector = Icons.Rounded.Add, contentDescription = "Add to Cart"
                         )
                     }
                 }
 
                 Text(
-                    text = "$${foodProduct.price}",
+                    text = "$${product.price}",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.SemiBold
@@ -127,7 +134,7 @@ fun FoodItemCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = foodProduct.description,
+                    text = product.description,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -141,16 +148,15 @@ fun FoodItemCard(
 @Preview(showBackground = true)
 @Composable
 private fun FoodItemCardPrev() {
-    val foodProduct = FoodProduct(
-        0, "Pizza", 79.99,
-        "Pizza is an Italian dish typically consisting of a flat base of leavened wheat-based" +
-                " dough topped with tomato, cheese, and other ingredients, baked at a high temperature, " +
-                "traditionally in a wood-fired oven.\n",
+    val product = Product(
+        "sdadsas",
+        "Pizza",
+        "Pizza is an Italian dish typically consisting of a flat base of leavened wheat-based" + " dough topped with tomato, cheese, and other ingredients, baked at a high temperature, " + "traditionally in a wood-fired oven.\n",
+        79.99,
         "https://upload.wikimedia.org/wikipedia/commons/9/91/Pizza-3007395.jpg",
-        4.5
+        4.5,
+        "Pizza"
     )
-    FoodItemCard(
-        foodProduct = foodProduct,
-        onAddClick = {} // Placeholder for the click event
+    FoodItemCard(product = product, onAddClick = {} // Placeholder for the click event
     )
 }

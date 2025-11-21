@@ -1,8 +1,9 @@
 package com.shuham.urbaneats.presentation.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shuham.urbaneats.data.remote.NetworkResult
+import com.shuham.urbaneats.util.NetworkResult
 import com.shuham.urbaneats.domain.usecase.auth.LoginUseCase
 import com.shuham.urbaneats.domain.usecase.validation.ValidateEmailUseCase
 import kotlinx.coroutines.channels.Channel
@@ -75,6 +76,7 @@ class LoginViewModel(
                         _state.update { it.copy(isLoading = false) }
                         // Send One-Time Effect
                         _effect.send(LoginEffect.ShowToast(result.message ?: "Unknown Error"))
+                        Log.e("TAG", "submitLogin error: ${result.message} ")
                     }
 
                     is NetworkResult.Loading -> { /* handled above */

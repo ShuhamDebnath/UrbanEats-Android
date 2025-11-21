@@ -1,6 +1,6 @@
 package com.shuham.urbaneats.domain.usecase.auth
 
-import com.shuham.urbaneats.data.remote.NetworkResult
+import com.shuham.urbaneats.util.NetworkResult
 import com.shuham.urbaneats.domain.model.AuthRequest
 import com.shuham.urbaneats.domain.model.AuthResponse
 import com.shuham.urbaneats.domain.repository.AuthRepository

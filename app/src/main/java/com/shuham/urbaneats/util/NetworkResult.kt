@@ -1,4 +1,4 @@
-package com.shuham.urbaneats.data.remote
+package com.shuham.urbaneats.util
 
 // T is a Generic type. It means this class can handle User, List<Food>, or anything.
 sealed class NetworkResult<T>(val data: T? = null, val message: String? = null) {

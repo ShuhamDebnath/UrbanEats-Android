@@ -12,6 +12,9 @@ import kotlinx.serialization.json.Json
 
 object KtorClient {
 
+    const val BASE_URL = "http://10.0.2.2:3000/"// Localhost for Emulator
+    //const val BASE_URL ="http://192.168.42.129:3000/" // Use this if testing on Real Device (Your PC IP)
+
 
     val httpClient = HttpClient(OkHttp) {
         // 1. JSON Serialization Setup
@@ -30,8 +33,7 @@ object KtorClient {
 
         // 3. Default Base URL (Saves typing)
         defaultRequest {
-            url("http://10.0.2.2:3000/") // Localhost for Emulator
-            // url("http://192.168.1.X:3000/") // Use this if testing on Real Device (Your PC IP)
+            url(BASE_URL)
         }
     }
 }

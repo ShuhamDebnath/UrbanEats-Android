@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
+    id("com.google.devtools.ksp") version "2.3.3"
+    //id("com.google.devtools.ksp")
 }
 
 android {
@@ -79,11 +81,16 @@ dependencies {
     //implementation(libs.koin.androidx.compose.navigation) // If using Compose Navigation
 
 
-    // Ktor Client (Core + Android Engine + Serialization)
+    // Ktor Client (Core + okhttp Engine + Serialization)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
-    //implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.logging) // To see logs in Logcat
+
+
+    //Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx) // Kotlin Extensions (Coroutines)
+    ksp(libs.androidx.room.compiler) // KSP is faster than KAPT
 }

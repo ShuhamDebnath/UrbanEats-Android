@@ -12,9 +12,12 @@ object SignUpRoute
 @Serializable
 object HomeRoute
 
+@Serializable
+object CartRoute
+
 // 2. Use Data Classes for screens WITH arguments
 @Serializable
 data class DetailsRoute(
-    val foodId: Int,
+    val foodId: String,
     val name: String // You can pass multiple args easily now!
 )
