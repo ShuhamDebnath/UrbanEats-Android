@@ -1,7 +1,24 @@
 const router = require('express').Router();
 const Product = require('../models/Product');
 
-// GET ALL PRODUCTS
+// 1. SEARCH PRODUCTS (Must be before /:id)
+// Usage: /api/products/search?q=burger
+router.get('/search', async (req, res) => {
+    try {
+        const query = req.query.q; // Reads 'q' from URL
+        if (!query) return res.json([]);
+
+        // Regex Search: 'i' makes it case-insensitive (Pizza matches pizza)
+        const products = await Product.find({
+            name: { $regex: query, $options: 'i' }
+        });
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// 2. GET ALL PRODUCTS
 router.get('/', async (req, res) => {
     try {
         const products = await Product.find();
@@ -11,11 +28,10 @@ router.get('/', async (req, res) => {
     }
 });
 
-// SEED DUMMY DATA (Run this once via Postman/Curl)
+// 3. SEED DATA (Run this once to fill DB)
 router.post('/seed', async (req, res) => {
     try {
-        // Clear existing products first (Optional)
-        // await Product.deleteMany({});
+        // Optional: await Product.deleteMany({});
 
         const dummyData = [
             {
@@ -67,7 +83,7 @@ router.post('/seed', async (req, res) => {
     }
 });
 
-// GET SINGLE PRODUCT
+// 4. GET SINGLE PRODUCT (Must be last)
 router.get('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);

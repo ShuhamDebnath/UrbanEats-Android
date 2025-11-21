@@ -15,6 +15,15 @@ object HomeRoute
 @Serializable
 object CartRoute
 
+@Serializable
+object CheckoutRoute
+
+@Serializable
+object ProfileRoute
+
+@Serializable
+object SplashRoute
+
 // 2. Use Data Classes for screens WITH arguments
 @Serializable
 data class DetailsRoute(

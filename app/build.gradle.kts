@@ -93,4 +93,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx) // Kotlin Extensions (Coroutines)
     ksp(libs.androidx.room.compiler) // KSP is faster than KAPT
+
+    implementation(libs.androidx.datastore.preferences)
 }

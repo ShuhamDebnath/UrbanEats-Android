@@ -29,3 +29,16 @@ fun ProductEntity.toDomain(): Product {
         category = category
     )
 }
+
+// 3. Network -> Domain (The Missing Link for Search)
+fun ProductDto.toDomain(): Product {
+    return Product(
+        id = id,
+        name = name,
+        description = description,
+        price = price,
+        imageUrl = imageUrl,
+        rating = rating,
+        category = category
+    )
+}

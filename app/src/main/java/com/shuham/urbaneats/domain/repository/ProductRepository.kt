@@ -12,4 +12,6 @@ interface ProductRepository {
     suspend fun refreshProducts(): NetworkResult<Unit>
 
     suspend fun getProductById(id: String): Product?
+
+    suspend fun searchProducts(query: String): NetworkResult<List<Product>>
 }

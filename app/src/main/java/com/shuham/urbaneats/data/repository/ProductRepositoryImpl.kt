@@ -10,6 +10,7 @@ import com.shuham.urbaneats.util.NetworkResult
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -50,4 +51,21 @@ class ProductRepositoryImpl(
     override suspend fun getProductById(id: String): Product? {
         return dao.getProductById(id)?.toDomain()
     }
+
+    override suspend fun searchProducts(query: String): NetworkResult<List<Product>> {
+        return try {
+            val response = client.get("api/products/search") {
+                parameter("q", query) // Adds ?q=query to URL
+            }
+            if (response.status == HttpStatusCode.OK) {
+                val dtos = response.body<List<ProductDto>>()
+                NetworkResult.Success(dtos.map { it.toDomain() })
+            } else {
+                NetworkResult.Error("Search failed")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message)
+        }
+    }
+
 }

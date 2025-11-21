@@ -1,5 +1,6 @@
 package com.shuham.urbaneats.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +40,8 @@ import com.shuham.urbaneats.domain.model.Product
 @Composable
 fun FoodItemCard(
     product: Product,
-    onAddClick: () -> Unit, // Pass the click event up!
+    onProductClick: () -> Unit,
+    onAddClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -56,6 +58,7 @@ fun FoodItemCard(
                 modifier = Modifier
                     .height(180.dp)
                     .fillMaxWidth()
+                    .clickable { onProductClick() }
             ) {
                 AsyncImage(
                     model = product.imageUrl,
@@ -157,6 +160,6 @@ private fun FoodItemCardPrev() {
         4.5,
         "Pizza"
     )
-    FoodItemCard(product = product, onAddClick = {} // Placeholder for the click event
+    FoodItemCard(product = product, onProductClick = {}, onAddClick = {} // Placeholder for the click event
     )
 }

@@ -3,6 +3,7 @@ package com.shuham.urbaneats.presentation.login
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shuham.urbaneats.data.local.TokenManager
 import com.shuham.urbaneats.util.NetworkResult
 import com.shuham.urbaneats.domain.usecase.auth.LoginUseCase
 import com.shuham.urbaneats.domain.usecase.validation.ValidateEmailUseCase
@@ -17,7 +18,8 @@ import kotlinx.coroutines.launch
 class LoginViewModel(
     // Inject UseCases (Domain Layer)
     private val loginUseCase: LoginUseCase,
-    private val validateEmailUseCase: ValidateEmailUseCase
+    private val validateEmailUseCase: ValidateEmailUseCase,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     // 1. The Source of Truth for State
@@ -67,8 +69,16 @@ class LoginViewModel(
 
                 when (result) {
                     is NetworkResult.Success -> {
+                        result.data?.let { authResponse ->
+                            // SAVE SESSION
+                            tokenManager.saveSession(
+                                token = authResponse.token,
+                                id = authResponse.user.id,
+                                name = authResponse.user.name,
+                                email = authResponse.user.email
+                            )
+                        }
                         _state.update { it.copy(isLoading = false) }
-                        // Send One-Time Effect
                         _effect.send(LoginEffect.NavigateToHome)
                     }
 
