@@ -9,7 +9,7 @@ import com.shuham.urbaneats.data.local.entity.ProductEntity
 
 @Database(
     entities = [ProductEntity::class, CartItemEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false // Keep it simple for now
 )
 abstract class UrbanEatsDatabase : RoomDatabase() {

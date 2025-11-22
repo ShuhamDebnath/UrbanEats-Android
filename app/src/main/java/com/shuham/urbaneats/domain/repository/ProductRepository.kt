@@ -14,4 +14,8 @@ interface ProductRepository {
     suspend fun getProductById(id: String): Product?
 
     suspend fun searchProducts(query: String): NetworkResult<List<Product>>
+
+    suspend fun toggleFavorite(productId: String, isFavorite: Boolean)
+
+    fun getFavoriteProducts(): Flow<List<Product>>
 }

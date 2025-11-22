@@ -5,7 +5,7 @@ import com.shuham.urbaneats.data.remote.dto.ProductDto
 import com.shuham.urbaneats.domain.model.Product
 
 // 1. Network -> Database
-fun ProductDto.toEntity(): ProductEntity {
+fun ProductDto.toEntity(isFavorite: Boolean = false): ProductEntity {
     return ProductEntity(
         id = id,
         name = name,
@@ -13,7 +13,8 @@ fun ProductDto.toEntity(): ProductEntity {
         price = price,
         imageUrl = imageUrl,
         rating = rating,
-        category = category
+        category = category,
+        isFavorite = isFavorite
     )
 }
 
@@ -26,7 +27,8 @@ fun ProductEntity.toDomain(): Product {
         price = price,
         imageUrl = imageUrl,
         rating = rating,
-        category = category
+        category = category,
+        isFavorite = isFavorite
     )
 }
 
@@ -39,6 +41,7 @@ fun ProductDto.toDomain(): Product {
         price = price,
         imageUrl = imageUrl,
         rating = rating,
-        category = category
+        category = category,
+        isFavorite = false
     )
 }

@@ -24,6 +24,18 @@ object ProfileRoute
 @Serializable
 object SplashRoute
 
+@Serializable
+object SearchRoute
+
+@Serializable
+object MainAppRoute
+
+@Serializable
+object OrdersRoute
+
+@Serializable
+object FavoritesRoute
+
 // 2. Use Data Classes for screens WITH arguments
 @Serializable
 data class DetailsRoute(

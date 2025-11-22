@@ -6,6 +6,7 @@ import com.shuham.urbaneats.domain.model.Product
 import com.shuham.urbaneats.domain.usecase.product.GetMenuUseCase
 import com.shuham.urbaneats.domain.usecase.product.RefreshMenuUseCase
 import com.shuham.urbaneats.domain.usecase.product.SearchProductsUseCase
+import com.shuham.urbaneats.domain.usecase.product.ToggleFavoriteUseCase
 import com.shuham.urbaneats.util.NetworkResult
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ data class HomeState(
 class HomeViewModel(
     private val getMenuUseCase: GetMenuUseCase,
     private val refreshMenuUseCase: RefreshMenuUseCase,
-    private val searchProductsUseCase: SearchProductsUseCase
+    private val searchProductsUseCase: SearchProductsUseCase,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase
 
 ) : ViewModel() {
 
@@ -121,6 +123,13 @@ class HomeViewModel(
                 }
                 else -> Unit
             }
+        }
+    }
+
+    fun toggleFavorite(product: Product) {
+        viewModelScope.launch {
+            // Toggle logic: if currently true, make false
+            toggleFavoriteUseCase(product.id, !product.isFavorite)
         }
     }
 }

@@ -19,25 +19,32 @@ class ProductRepositoryImpl(
     private val client: HttpClient,
     private val dao: ProductDao
 ) : ProductRepository {
-
-    // 1. Source of Truth: ALWAYS read from the DB
     override fun getProducts(): Flow<List<Product>> {
         return dao.getAllProducts().map { entities ->
-            entities.map { it.toDomain() } // Convert DB entities to Clean Domain models
+            entities.map { it.toDomain() }
         }
     }
 
-    // 2. The Sync Logic
+    // THE FIX: Merge Strategy
     override suspend fun refreshProducts(): NetworkResult<Unit> {
         return try {
-            // A. Fetch from API
+            // 1. Fetch fresh data from API
             val response = client.get("api/products")
 
             if (response.status == HttpStatusCode.OK) {
                 val remoteData = response.body<List<ProductDto>>()
 
-                // B. Save to DB (This automatically triggers the Flow above!)
-                dao.insertAll(remoteData.map { it.toEntity() })
+                // 2. Get current favorites from Local DB (to preserve them)
+                val favoriteIds = dao.getFavoriteProductIds().toSet()
+
+                // 3. Map API data to Entities, KEEPING the favorite status
+                val entities = remoteData.map { dto ->
+                    val isFav = favoriteIds.contains(dto.id)
+                    dto.toEntity(isFavorite = isFav)
+                }
+
+                // 4. Insert the merged list
+                dao.insertAll(entities)
 
                 NetworkResult.Success(Unit)
             } else {
@@ -55,16 +62,27 @@ class ProductRepositoryImpl(
     override suspend fun searchProducts(query: String): NetworkResult<List<Product>> {
         return try {
             val response = client.get("api/products/search") {
-                parameter("q", query) // Adds ?q=query to URL
+                parameter("q", query)
             }
             if (response.status == HttpStatusCode.OK) {
                 val dtos = response.body<List<ProductDto>>()
+                // Note: For search results, we could also check against DB for favorites if we wanted perfection
                 NetworkResult.Success(dtos.map { it.toDomain() })
             } else {
                 NetworkResult.Error("Search failed")
             }
         } catch (e: Exception) {
             NetworkResult.Error(e.message)
+        }
+    }
+
+    override suspend fun toggleFavorite(productId: String, isFavorite: Boolean) {
+        dao.updateFavoriteStatus(productId, isFavorite)
+    }
+
+    override fun getFavoriteProducts(): Flow<List<Product>> {
+        return dao.getFavoriteProducts().map { entities ->
+            entities.map { it.toDomain() }
         }
     }
 

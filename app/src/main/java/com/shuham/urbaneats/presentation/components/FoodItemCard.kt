@@ -1,83 +1,80 @@
 package com.shuham.urbaneats.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.shuham.urbaneats.domain.model.Product
 
 @Composable
 fun FoodItemCard(
-    product: Product,
-    onProductClick: () -> Unit,
+    foodProduct: Product,
     onAddClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onItemClick: () -> Unit,
+    onFavoriteClick: () -> Unit // <--- NEW PARAMETER
 ) {
     Card(
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // M3 Elevation
+        onClick = onItemClick,
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(12.dp),
-        modifier = modifier
-            .fillMaxWidth() // Fill the width of the parent (LazyColumn)
-            .padding(8.dp) // External padding
+        elevation = CardDefaults.cardElevation(0.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(8.dp, RoundedCornerShape(24.dp), ambientColor = Color.Gray.copy(0.1f), spotColor = Color.Gray.copy(0.1f))
     ) {
         Column {
-            // Image + Rating Badge Box
-            Box(
-                modifier = Modifier
-                    .height(180.dp)
-                    .fillMaxWidth()
-                    .clickable { onProductClick() }
-            ) {
+            // IMAGE CONTAINER
+            Box(modifier = Modifier.height(180.dp).fillMaxWidth()) {
                 AsyncImage(
-                    model = product.imageUrl,
-                    contentDescription = product.name,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = 12.dp, topEnd = 12.dp
-                            )
-                        ), // Clip top corners
-                    contentScale = ContentScale.Crop
+                    model = foodProduct.imageUrl,
+                    contentDescription = foodProduct.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
 
-                // The Rating Badge (Overlaid)
+                // Favorite Icon
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(bottomEnd = 8.dp),
-                    modifier = Modifier.align(Alignment.TopStart)
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                        .size(36.dp)
+                        .clickable { onFavoriteClick() }, // <--- CLICK ACTION
+                    shape = CircleShape,
+                    color = Color.White
+                ) {
+                    Icon(
+                        // Toggle Icon based on state
+                        imageVector = if (foodProduct.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        modifier = Modifier.padding(8.dp),
+                        // Toggle Color based on state
+                        tint = if (foodProduct.isFavorite) Color.Red else Color.Gray
+                    )
+                }
+
+                // Rating Chip
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp),
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.surface
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -86,12 +83,12 @@ fun FoodItemCard(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = Color(0xFFFFB300), // Gold color
-                            modifier = Modifier.size(16.dp)
+                            tint = Color(0xFFFFB300),
+                            modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "${product.rating}",
+                            text = "${foodProduct.rating}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -99,67 +96,36 @@ fun FoodItemCard(
                 }
             }
 
-            // Text Content
+            // INFO CONTAINER
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Text(
-                        text = product.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f) // Pushes button to the right
-                    )
-
-                    // The Action Button
-                    IconButton(
-                        onClick = onAddClick, // Use the lambda passed from parent
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = foodProduct.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Add, contentDescription = "Add to Cart"
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "25 mins • Free Delivery",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
                         )
                     }
+                    Text(
+                        text = "$${foodProduct.price}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
-
-                Text(
-                    text = "$${product.price}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = product.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun FoodItemCardPrev() {
-    val product = Product(
-        "sdadsas",
-        "Pizza",
-        "Pizza is an Italian dish typically consisting of a flat base of leavened wheat-based" + " dough topped with tomato, cheese, and other ingredients, baked at a high temperature, " + "traditionally in a wood-fired oven.\n",
-        79.99,
-        "https://upload.wikimedia.org/wikipedia/commons/9/91/Pizza-3007395.jpg",
-        4.5,
-        "Pizza"
-    )
-    FoodItemCard(product = product, onProductClick = {}, onAddClick = {} // Placeholder for the click event
-    )
 }
