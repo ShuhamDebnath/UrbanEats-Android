@@ -36,6 +36,7 @@ import com.shuham.urbaneats.presentation.navigation.ProfileRoute
 import com.shuham.urbaneats.presentation.navigation.SearchRoute
 import com.shuham.urbaneats.presentation.orders.OrdersRoute
 import com.shuham.urbaneats.presentation.profile.ProfileRoute
+import com.shuham.urbaneats.presentation.search.SearchRoute
 import kotlinx.serialization.Serializable
 
 // Define the Tab Structure
@@ -115,18 +116,11 @@ fun MainScreen(
             // 1. HOME TAB
             composable<HomeRoute> {
                 HomeRoute(
-                    onFoodClick = { product ->
-                        navController.navigate(DetailsRoute(product.id, product.name))
-                    },
-                    onCartClick = {
-                        navController.navigate(CartRoute) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onProfileClick = {
-                        navController.navigate(ProfileRoute) {
+                    onFoodClick = { product -> navController.navigate(DetailsRoute(product.id, product.name)) },
+                    onCartClick = { navController.navigate(CartRoute) },
+                    onProfileClick = { navController.navigate(ProfileRoute) },
+                    onSearchClick = {
+                        navController.navigate(SearchRoute) {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
@@ -137,11 +131,11 @@ fun MainScreen(
 
             // 2. SEARCH TAB (Placeholder for now)
             composable<SearchRoute> {
-                // Create a dummy SearchScreen later
-                // SearchRoute(...)
-                androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
-                    Text("Search Screen Coming Soon", modifier = Modifier.align(androidx.compose.ui.Alignment.Center))
-                }
+                SearchRoute(
+                    onProductClick = { product ->
+                        navController.navigate(DetailsRoute(product.id, product.name))
+                    }
+                )
             }
 
             // 3. CART TAB

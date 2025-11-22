@@ -1,32 +1,24 @@
 package com.shuham.urbaneats
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
-import com.shuham.urbaneats.presentation.cart.CartRoute
-import com.shuham.urbaneats.presentation.checkout.CheckoutRoute
-import com.shuham.urbaneats.presentation.details.DetailRoute
-import com.shuham.urbaneats.presentation.home.HomeRoute
+import com.shuham.urbaneats.core.NotificationHelper
 import com.shuham.urbaneats.presentation.login.LoginRoute
 import com.shuham.urbaneats.presentation.main.MainScreen
-import com.shuham.urbaneats.presentation.navigation.CartRoute
-import com.shuham.urbaneats.presentation.navigation.CheckoutRoute
-import com.shuham.urbaneats.presentation.navigation.DetailsRoute
-import com.shuham.urbaneats.presentation.navigation.HomeRoute
 import com.shuham.urbaneats.presentation.navigation.LoginRoute
 import com.shuham.urbaneats.presentation.navigation.MainAppRoute
-import com.shuham.urbaneats.presentation.navigation.ProfileRoute
-import com.shuham.urbaneats.presentation.navigation.SignUpRoute
 import com.shuham.urbaneats.presentation.navigation.SplashRoute
-import com.shuham.urbaneats.presentation.profile.ProfileRoute
-import com.shuham.urbaneats.presentation.signup.SignUpScreen
 import com.shuham.urbaneats.presentation.splash.SplashRoute
-import com.shuham.urbaneats.presentation.splash.SplashScreen
 import com.shuham.urbaneats.ui.theme.UrbanEatsTheme
 import org.koin.compose.KoinContext
 
@@ -35,9 +27,27 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // 1. Initialize Channel (Ensure this is here)
+        val notificationHelper = NotificationHelper(this)
+        notificationHelper.createNotificationChannel()
+
         setContent {
             UrbanEatsTheme {
                 KoinContext {
+                    // 2. ASK FOR PERMISSION (Android 13+)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val permissionLauncher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.RequestPermission(),
+                            onResult = { isGranted ->
+                                // Optional: Log if granted or denied
+                            }
+                        )
+
+                        LaunchedEffect(Unit) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
                     val navController = rememberNavController()
 
                     NavHost(

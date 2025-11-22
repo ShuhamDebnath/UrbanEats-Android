@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -41,23 +42,19 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeRoute(
     viewModel: HomeViewModel = koinViewModel(),
     onFoodClick: (Product) -> Unit,
-    onCartClick: () -> Unit, // Add this from previous steps
-    onProfileClick: () -> Unit // Add this
+    onCartClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    onSearchClick: () -> Unit // <--- New Navigation Event
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
-    val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
 
     HomeScreen(
         state = state,
-        searchQuery = searchQuery,
-        searchResults = searchResults,
-        isSearching = isSearching,
-        onSearchChange = viewModel::onSearchTextChange,
+        onRefresh = viewModel::refreshData,
         onProductClick = onFoodClick,
         onCartClick = onCartClick,
         onProfileClick = onProfileClick,
+        onSearchClick = onSearchClick, // <--- Pass it down
         onFavoriteClick = viewModel::toggleFavorite
     )
 }
@@ -69,131 +66,85 @@ fun HomeRoute(
 @Composable
 fun HomeScreen(
     state: HomeState,
-    searchQuery: String,
-    searchResults: List<Product>,
-    isSearching: Boolean,
-    onSearchChange: (String) -> Unit,
-    onProductClick: (Product) -> Unit, // This handles navigation
+    onRefresh: () -> Unit,
+    onProductClick: (Product) -> Unit,
     onCartClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onSearchClick: () -> Unit,
     onFavoriteClick: (Product) -> Unit
 ) {
-    // Dummy Categories for UI demo (Real app would fetch these)
     val categories = remember {
-        listOf(
-            Category("all", "All", "🍽️"),
-            Category("burger", "Burgers", "🍔"),
-            Category("pizza", "Pizza", "🍕"),
-            Category("asian", "Asian", "🍣"),
-            Category("dessert", "Dessert", "🍩")
-        )
+        listOf(Category("all", "All", "🍽️"), Category("burger", "Burgers", "🍔"), Category("pizza", "Pizza", "🍕"), Category("asian", "Asian", "🍣"), Category("dessert", "Dessert", "🍩"))
     }
     var selectedCategory by remember { mutableStateOf("all") }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background, // Use the Warm Cream
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-                // 1. Top Bar
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text("Deliver to", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Home, 123 Street", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            Icon(Icons.Default.ArrowDropDown, null, tint = MaterialTheme.colorScheme.primary)
-                        }
-                    }
-
-                    // Profile Picture Placeholder
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surface,
-                        modifier = Modifier.size(40.dp).clickable { onProfileClick() },
-                        shadowElevation = 4.dp
-                    ) {
-                        Icon(Icons.Default.Person, null, modifier = Modifier.padding(8.dp), tint = MaterialTheme.colorScheme.onSurface)
+            // Clean Top Bar (No Search Box)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Location / Title Section
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Deliver to",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Home, 123 St",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
-
-                // 2. Search Bar
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = onSearchChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
-                    placeholder = { Text("Find your craving...") },
-                    leadingIcon = { Icon(Icons.Default.Search, null) },
-                    trailingIcon = { Icon(Icons.Default.Tune, null) }, // Filter icon
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent
-                    )
-                )
             }
         }
     ) { innerPadding ->
         LazyColumn(
-            contentPadding = PaddingValues(
-                top = innerPadding.calculateTopPadding() + 16.dp,
-                bottom = 100.dp // Space for BottomNav
-            ),
+            contentPadding = PaddingValues(top = innerPadding.calculateTopPadding() + 16.dp, bottom = 100.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-
-            // 3. Categories (Only show if not searching)
-            if (!isSearching) {
-                item {
-                    CategorySection(
-                        categories = categories,
-                        selectedCategory = selectedCategory,
-                        onCategoryClick = { selectedCategory = it }
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                item {
-                    Text(
-                        text = "Popular Restaurants",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 24.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+            item {
+                CategorySection(categories, selectedCategory) { selectedCategory = it }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+            item {
+                Text("Popular Restaurants", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // 4. The Content List
-            val displayList = if (isSearching) searchResults else state.products
-
-//            if (state.isLoading && state.products.isEmpty()) {
-//                // Show 3 shimmers instead of Spinner
-//                Column {
-//                    repeat(3) {
-//                        FoodItemShimmer()
-//                    }
-//                }
-//            }
-            if (displayList.isEmpty() && !state.isLoading) {
-                item {
-                    Text("No items found", modifier = Modifier.fillMaxWidth().padding(32.dp), color = Color.Gray)
-                }
-            }
-            else {
-                items(displayList) { product ->
+            if (state.isLoading && state.products.isEmpty()) {
+                items(3) { FoodItemShimmer() }
+            } else {
+                items(state.products) { product ->
                     Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
                         FoodItemCard(
                             foodProduct = product,
                             onAddClick = { },
                             onItemClick = { onProductClick(product) },
-                            onFavoriteClick = { onFavoriteClick(product) } // <--- TRIGGER EVENT
+                            onFavoriteClick = { onFavoriteClick(product) }
                         )
                     }
                 }
@@ -213,13 +164,11 @@ fun HomeScreen(
 private fun HomeScreenPrev() {
     HomeScreen(
         HomeState(),
-        "",
-        emptyList(),
-        false,
         {},
         {},
         {},
         {},
-        {}
+        {},
+        {},
     )
 }

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,7 +45,7 @@ fun OrdersScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("My Orders", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 ),
                 navigationIcon = {
@@ -139,7 +140,11 @@ fun OrderCard(order: Order) {
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Divider(color = Color.LightGray.copy(alpha = 0.2f))
+            HorizontalDivider(
+                Modifier,
+                DividerDefaults.Thickness,
+                color = Color.LightGray.copy(alpha = 0.2f)
+            )
             Spacer(modifier = Modifier.height(12.dp))
 
             // Footer: ID + Total

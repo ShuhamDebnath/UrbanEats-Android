@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.shuham.urbaneats.domain.model.Product
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 // ==========================================
@@ -33,18 +34,32 @@ fun DetailRoute(
     onBackClick: () -> Unit,
     viewModel: DetailViewModel = koinViewModel()
 ) {
-    // Trigger data fetch when screen opens
-    LaunchedEffect(foodId) {
-        viewModel.loadProduct(foodId)
-    }
-
+    // Trigger data fetch
+    LaunchedEffect(foodId) { viewModel.loadProduct(foodId) }
     val state by viewModel.state.collectAsState()
 
-    DetailScreen(
-        state = state,
-        onBackClick = onBackClick,
-        onAddToCart = viewModel::addToCart
-    )
+    // Snack State
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
+        // We pass innerPadding to avoid overlapping with snackbar, though Box usually handles it.
+        Box(modifier = Modifier.padding(innerPadding)) {
+            DetailScreen(
+                state = state,
+                onBackClick = onBackClick,
+                onAddToCart = {
+                    viewModel.addToCart()
+                    // Show Feedback
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Added to Cart")
+                    }
+                }
+            )
+        }
+    }
 }
 
 // ==========================================

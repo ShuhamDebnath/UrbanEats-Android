@@ -2,6 +2,10 @@ package com.shuham.urbaneats.presentation.checkout
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.shuham.urbaneats.data.worker.OrderStatusWorker
 import com.shuham.urbaneats.domain.usecase.cart.CartSummary
 import com.shuham.urbaneats.domain.usecase.cart.GetCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.PlaceOrderUseCase
@@ -28,7 +32,8 @@ sealed interface CheckoutEffect {
 
 class CheckoutViewModel(
     private val getCartUseCase: GetCartUseCase,
-    private val placeOrderUseCase: PlaceOrderUseCase
+    private val placeOrderUseCase: PlaceOrderUseCase,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CheckoutState())
@@ -70,7 +75,15 @@ class CheckoutViewModel(
             when (result) {
                 is NetworkResult.Success -> {
                     _state.update { it.copy(isLoading = false) }
+                    // FIRE BACKGROUND WORKER
+                    val workRequest = OneTimeWorkRequestBuilder<OrderStatusWorker>()
+                        .setInputData(workDataOf("order_id" to "12345")) // In real app, use result.data.id
+                        .build()
+
+                    workManager.enqueue(workRequest)
+
                     _effect.send(CheckoutEffect.NavigateToSuccess)
+
                 }
                 is NetworkResult.Error -> {
                     _state.update { it.copy(isLoading = false) }

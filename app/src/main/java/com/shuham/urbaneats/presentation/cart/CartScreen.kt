@@ -14,7 +14,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +62,7 @@ fun CartScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("My Cart", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
@@ -72,24 +74,35 @@ fun CartScreen(
         }
     ) { innerPadding ->
         if (state.summary.items.isEmpty()) {
-            Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.Center) {
+            // ENHANCED EMPTY STATE
+            Box(
+                modifier = Modifier.padding(innerPadding).fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        modifier = Modifier.size(100.dp),
+                        tint = Color.LightGray.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
                     Text("Your cart is empty", style = MaterialTheme.typography.headlineSmall, color = Color.Gray)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Go find some cravings!", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    // Optional: You can add a button here to navigate back to Home if navigation was passed down
                 }
             }
         } else {
             LazyColumn(
-                // FIX: Correctly apply the padding from this specific Scaffold
                 contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding() + 16.dp,
                     bottom = innerPadding.calculateBottomPadding() + 16.dp,
                     start = 24.dp,
                     end = 24.dp
                 ),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxSize()
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(state.summary.items) { item ->
                     CartItemCard(item, onIncrement, onDecrement)
@@ -270,7 +283,11 @@ fun CartSummaryFooter(total: Double, onCheckout: () -> Unit) {
                     BillRow(label = "Delivery Fee", amount = 2.00)
                     BillRow(label = "Tax (5%)", amount = total * 0.05)
 
-                    Divider(modifier = Modifier.padding(vertical = 16.dp), color = Color.LightGray.copy(0.3f))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 16.dp),
+                        thickness = DividerDefaults.Thickness,
+                        color = Color.LightGray.copy(0.3f)
+                    )
                 }
             }
 

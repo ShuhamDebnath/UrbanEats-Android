@@ -51,7 +51,7 @@ fun FavoritesScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("My Favorites", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 ),
                 navigationIcon = {

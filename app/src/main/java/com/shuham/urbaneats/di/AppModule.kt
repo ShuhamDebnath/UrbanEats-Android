@@ -2,6 +2,7 @@ package com.shuham.urbaneats.di
 
 
 import androidx.room.Room
+import com.shuham.urbaneats.core.NotificationHelper
 import com.shuham.urbaneats.data.local.TokenManager
 import com.shuham.urbaneats.data.local.UrbanEatsDatabase
 import com.shuham.urbaneats.data.remote.KtorClient
@@ -35,6 +36,7 @@ import com.shuham.urbaneats.presentation.home.HomeViewModel
 import com.shuham.urbaneats.presentation.login.LoginViewModel
 import com.shuham.urbaneats.presentation.orders.OrdersViewModel
 import com.shuham.urbaneats.presentation.profile.ProfileViewModel
+import com.shuham.urbaneats.presentation.search.SearchViewModel
 import com.shuham.urbaneats.presentation.splash.SplashViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.factoryOf
@@ -86,6 +88,7 @@ val appModule = module {
     viewModelOf(::SplashViewModel)
     viewModelOf(::OrdersViewModel)
     viewModelOf(::FavoritesViewModel)
+    viewModelOf(::SearchViewModel)
 
     // 1. Provide Database Instance (Singleton)
     single {
@@ -103,6 +106,10 @@ val appModule = module {
 
     // Add to AppModule
     single { TokenManager(androidContext()) }
+
+    // Add NotificationHelper
+    single { NotificationHelper(androidContext()) }
+    single { androidx.work.WorkManager.getInstance(androidContext()) }
 
 }
 

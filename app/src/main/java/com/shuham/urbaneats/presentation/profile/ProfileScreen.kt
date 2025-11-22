@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -69,6 +70,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .background(MaterialTheme.colorScheme.background) // Cream Background
             .verticalScroll(rememberScrollState())
     ) {
@@ -149,7 +151,7 @@ fun ProfileScreen(
         ProfileSectionTitle("Settings")
         ProfileOptionItem(Icons.Default.NotificationsNone, "Notifications", onClick = { })
         ProfileOptionItem(Icons.Default.Language, "Language", onClick = { })
-        ProfileOptionItem(Icons.Default.HelpOutline, "Help & Support", onClick = { })
+        ProfileOptionItem(Icons.AutoMirrored.Filled.HelpOutline, "Help & Support", onClick = { })
 
         Spacer(modifier = Modifier.height(32.dp))
 
