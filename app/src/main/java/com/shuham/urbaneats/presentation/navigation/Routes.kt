@@ -36,12 +36,11 @@ object OrdersRoute
 @Serializable
 object FavoritesRoute
 
-//@Serializable
-//object OrderSuccessRoute
-//
-//@Serializable
-//object TrackOrderRoute
+@Serializable
+object NoInternetRoute
 
+@Serializable
+data class OrderFailureRoute(val reason: String)
 @Serializable
 data class OrderSuccessRoute(val orderId: String)
 

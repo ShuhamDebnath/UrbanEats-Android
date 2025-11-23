@@ -3,20 +3,25 @@ package com.shuham.urbaneats
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.shuham.urbaneats.core.NetworkUtils
 import com.shuham.urbaneats.core.NotificationHelper
+import com.shuham.urbaneats.presentation.common.NoInternetScreen
 import com.shuham.urbaneats.presentation.login.LoginRoute
 import com.shuham.urbaneats.presentation.main.MainScreen
 import com.shuham.urbaneats.presentation.navigation.LoginRoute
 import com.shuham.urbaneats.presentation.navigation.MainAppRoute
+import com.shuham.urbaneats.presentation.navigation.NoInternetRoute
 import com.shuham.urbaneats.presentation.navigation.SignUpRoute
 import com.shuham.urbaneats.presentation.navigation.SplashRoute
 import com.shuham.urbaneats.presentation.signup.SignUpRoute
@@ -37,19 +42,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             UrbanEatsTheme {
                 KoinContext {
-                    // 2. ASK FOR PERMISSION (Android 13+)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val permissionLauncher = rememberLauncherForActivityResult(
-                            contract = ActivityResultContracts.RequestPermission(),
-                            onResult = { isGranted ->
-                                // Optional: Log if granted or denied
-                            }
-                        )
 
-                        LaunchedEffect(Unit) {
-                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    }
+                    // ASK FOR PERMISSION (Android 13+)
+                    GrantNotificationPermission()
+
                     val navController = rememberNavController()
 
                     NavHost(
@@ -61,7 +57,6 @@ class MainActivity : ComponentActivity() {
                         composable<SplashRoute> {
                             SplashRoute(
                                 onNavigateToHome = {
-                                    // Navigate to the Main Container, not just Home
                                     navController.navigate(MainAppRoute) {
                                         popUpTo(SplashRoute) { inclusive = true }
                                     }
@@ -87,21 +82,24 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        // 3. SIGNUP
+
+                        // 3. SIGN UP
                         composable<SignUpRoute> {
-                            SignUpRoute(
+                            // Ensure you created SignUpRoute in the previous step or import it
+                            com.shuham.urbaneats.presentation.signup.SignUpRoute(
                                 onNavigateToHome = {
                                     navController.navigate(MainAppRoute) {
+                                        popUpTo(LoginRoute) { inclusive = true }
                                         popUpTo(SignUpRoute) { inclusive = true }
                                     }
                                 },
                                 onNavigateToLogin = {
-                                    navController.navigate(LoginRoute)
+                                    navController.popBackStack()
                                 }
                             )
                         }
 
-                        // 4. MAIN APP CONTAINER (Holds Bottom Bar)
+                        // 4. MAIN APP CONTAINER
                         composable<MainAppRoute> {
                             MainScreen(
                                 onLogout = {
@@ -111,11 +109,43 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+
+                        // 5. GLOBAL NO INTERNET SCREEN
+                        composable<NoInternetRoute> {
+                            NoInternetScreen(
+                                onRetry = {
+                                    // THE LOGIC IS HERE
+                                    if (NetworkUtils.isNetworkAvailable(this@MainActivity)) {
+                                        // Internet is back! Go back to previous screen
+                                        navController.popBackStack()
+                                    } else {
+                                        // Still no internet
+                                        Toast.makeText(this@MainActivity, "Internet is still unavailable", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
 
 
             }
+        }
+    }
+}
+
+@Composable
+private fun GrantNotificationPermission() {
+    // ASK FOR PERMISSION (Android 13+)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val permissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onResult = { isGranted ->
+                // Optional: Log if granted or denied
+            }
+        )
+        LaunchedEffect(Unit) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }

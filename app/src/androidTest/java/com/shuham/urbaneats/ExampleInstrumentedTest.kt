@@ -1,4 +1,4 @@
-package com.example.urbaneats
+package com.shuham.urbaneats
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

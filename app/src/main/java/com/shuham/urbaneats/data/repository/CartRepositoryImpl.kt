@@ -5,10 +5,12 @@ import com.shuham.urbaneats.data.local.dao.CartDao
 import com.shuham.urbaneats.data.local.entity.CartItemEntity
 import com.shuham.urbaneats.data.remote.dto.OrderItemDto
 import com.shuham.urbaneats.data.remote.dto.OrderRequest
+import com.shuham.urbaneats.data.remote.dto.OrderResponseDto
 import com.shuham.urbaneats.domain.model.Product
 import com.shuham.urbaneats.domain.repository.CartRepository
 import com.shuham.urbaneats.util.NetworkResult
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -63,45 +65,38 @@ class CartRepositoryImpl(
     }
 
 
-    override suspend fun placeOrder(
-        address: String,
-        total: Double,
-        items: List<CartItemEntity>
-    ): NetworkResult<Unit> {
+    override suspend fun placeOrder(address: String, total: Double, items: List<CartItemEntity>): NetworkResult<String> {
         return try {
+            val session = tokenManager.getUserSession().first()
+            if (session.id == null) return NetworkResult.Error("User not logged in")
 
-            // 1. Get Real User ID
-            val userSession = tokenManager.getUserSession().first()
-
-            if (userSession.id == null) {
-                return NetworkResult.Error("User not logged in")
-            }
-
-
-            // 2. Create Request
             val request = OrderRequest(
-                userId = userSession.id, // REAL ID
-                userName = userSession.name ?: "Unknown", // REAL NAME
+                userId = session.id,
+                userName = session.name ?: "Valued Customer",
                 items = items.map { OrderItemDto(it.productId, it.name, it.quantity, it.price) },
                 totalAmount = total,
                 address = address
             )
 
-            // 3. Send to API
             val response = client.post("api/orders") {
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
             if (response.status == HttpStatusCode.OK) {
-                // 4. CRITICAL: Clear Local Cart on Success
+                // 1. Parse the Response to get the ID
+                val responseData = response.body<OrderResponseDto>()
+
+                // 2. Clear Cart only after success
                 dao.clearCart()
-                NetworkResult.Success(Unit)
+
+                // 3. Return the ID
+                NetworkResult.Success(responseData.id)
             } else {
                 NetworkResult.Error("Order Failed: ${response.status}")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Network Error: ${e.message}")
+            NetworkResult.Error("Network Error: ${e.localizedMessage}")
         }
     }
 }

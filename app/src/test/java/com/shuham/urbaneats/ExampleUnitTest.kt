@@ -1,4 +1,4 @@
-package com.example.urbaneats
+package com.shuham.urbaneats
 
 import org.junit.Test
 

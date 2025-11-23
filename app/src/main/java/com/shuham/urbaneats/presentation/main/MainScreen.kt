@@ -3,14 +3,18 @@ package com.shuham.urbaneats.presentation.main
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.ShoppingCart
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,16 +33,17 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.shuham.urbaneats.presentation.cart.CartRoute
 import com.shuham.urbaneats.presentation.checkout.CheckoutRoute
+import com.shuham.urbaneats.presentation.checkout.OrderFailureRoute
 import com.shuham.urbaneats.presentation.checkout.OrderSuccessRoute
 import com.shuham.urbaneats.presentation.details.DetailRoute
 import com.shuham.urbaneats.presentation.favorites.FavoritesRoute
-import com.shuham.urbaneats.presentation.favorites.FavoritesState
 import com.shuham.urbaneats.presentation.home.HomeRoute
 import com.shuham.urbaneats.presentation.navigation.CartRoute
 import com.shuham.urbaneats.presentation.navigation.CheckoutRoute
 import com.shuham.urbaneats.presentation.navigation.DetailsRoute
 import com.shuham.urbaneats.presentation.navigation.FavoritesRoute
 import com.shuham.urbaneats.presentation.navigation.HomeRoute
+import com.shuham.urbaneats.presentation.navigation.OrderFailureRoute
 import com.shuham.urbaneats.presentation.navigation.OrderSuccessRoute
 import com.shuham.urbaneats.presentation.navigation.OrdersRoute
 import com.shuham.urbaneats.presentation.navigation.ProfileRoute
@@ -48,7 +53,6 @@ import com.shuham.urbaneats.presentation.orders.OrdersRoute
 import com.shuham.urbaneats.presentation.profile.ProfileRoute
 import com.shuham.urbaneats.presentation.search.SearchRoute
 import com.shuham.urbaneats.presentation.track_order.TrackOrderRoute
-import kotlinx.serialization.Serializable
 
 // Define the Tab Structure
 
@@ -229,10 +233,14 @@ fun MainScreen(
             composable<CheckoutRoute> {
                 CheckoutRoute(
                     onOrderSuccess = {
-                        navController.navigate(OrderSuccessRoute) {
-                            popUpTo(OrderSuccessRoute) { inclusive = true }
+                        navController.navigate(OrderSuccessRoute(it)) {
+                            popUpTo(CheckoutRoute) { inclusive = true }
                         }
+                    },onOrderFailure = { reason ->
+                        // Navigate to Failure Screen
+                        navController.navigate(OrderFailureRoute(reason))
                     },
+
                     onBackClick = { navController.popBackStack() }
                 )
             }
@@ -258,9 +266,34 @@ fun MainScreen(
                 )
             }
 
+            // FAILURE SCREEN ROUTE
+            composable<OrderFailureRoute> { backStackEntry ->
+                val args = backStackEntry.toRoute<OrderFailureRoute>()
+                OrderFailureRoute(
+                    reason = args.reason,
+                    onRetryClick = {
+                        // Simply pop back to Checkout to try again
+                        navController.popBackStack()
+                    },
+                    onBackToCartClick = {
+                        // Go back to Cart, clear Checkout from stack
+                        navController.popBackStack(CartRoute, inclusive = false)
+                    }
+                )
+            }
+
             composable<TrackOrderRoute> {
                 TrackOrderRoute(onBackClick = { navController.popBackStack() })
             }
+
+//            composable<NoInternetRoute> {
+//                NoInternetScreen(
+//                    onRetry = {
+//                        // Logic to check internet or pop back
+//                        navController.popBackStack()
+//                    }
+//                )
+//            }
         }
     }
 }

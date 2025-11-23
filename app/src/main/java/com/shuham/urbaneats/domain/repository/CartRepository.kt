@@ -10,6 +10,6 @@ interface CartRepository {
     suspend fun addToCart(product: Product)
     suspend fun removeFromCart(productId: String)
     suspend fun updateQuantity(productId: String, newQuantity: Int)
-    suspend fun placeOrder(address: String, total: Double, items: List<CartItemEntity>): NetworkResult<Unit>
+    suspend fun placeOrder(address: String, total: Double, items: List<CartItemEntity>): NetworkResult<String>
 
 }

@@ -5,7 +5,7 @@ import com.shuham.urbaneats.domain.repository.CartRepository
 import com.shuham.urbaneats.util.NetworkResult
 
 class PlaceOrderUseCase(private val repository: CartRepository) {
-    suspend operator fun invoke(address: String, total: Double, items: List<CartItemEntity>): NetworkResult<Unit> {
+    suspend operator fun invoke(address: String, total: Double, items: List<CartItemEntity>): NetworkResult<String> {
         if (address.isBlank()) return NetworkResult.Error("Address is required")
         if (items.isEmpty()) return NetworkResult.Error("Cart is empty")
 

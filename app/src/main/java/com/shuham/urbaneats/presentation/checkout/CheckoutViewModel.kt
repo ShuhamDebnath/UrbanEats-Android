@@ -26,7 +26,9 @@ data class CheckoutState(
 )
 
 sealed interface CheckoutEffect {
-    data object NavigateToSuccess : CheckoutEffect
+    // CHANGE: Now carries the ID
+    data class NavigateToSuccess(val orderId: String) : CheckoutEffect
+    data class NavigateToFailure(val reason: String) : CheckoutEffect
     data class ShowToast(val message: String) : CheckoutEffect
 }
 
@@ -43,7 +45,6 @@ class CheckoutViewModel(
     val effect = _effect.receiveAsFlow()
 
     init {
-        // Load cart data to display total amount
         viewModelScope.launch {
             getCartUseCase().collectLatest { summary ->
                 _state.update { it.copy(summary = summary) }
@@ -57,7 +58,6 @@ class CheckoutViewModel(
 
     fun placeOrder() {
         val currentState = _state.value
-
         if (currentState.address.isBlank()) {
             _state.update { it.copy(error = "Please enter a delivery address") }
             return
@@ -75,21 +75,23 @@ class CheckoutViewModel(
             when (result) {
                 is NetworkResult.Success -> {
                     _state.update { it.copy(isLoading = false) }
-                    // FIRE BACKGROUND WORKER
-                    val workRequest = OneTimeWorkRequestBuilder<OrderStatusWorker>()
-                        .setInputData(workDataOf("order_id" to "12345")) // In real app, use result.data.id
-                        .build()
 
+                    val orderId = result.data ?: "unknown"
+
+                    // Fire Background Worker with REAL ID
+                    val workRequest = OneTimeWorkRequestBuilder<OrderStatusWorker>()
+                        .setInputData(workDataOf("order_id" to orderId))
+                        .build()
                     workManager.enqueue(workRequest)
 
-                    _effect.send(CheckoutEffect.NavigateToSuccess)
-
+                    // Send ID to UI
+                    _effect.send(CheckoutEffect.NavigateToSuccess(orderId))
                 }
                 is NetworkResult.Error -> {
                     _state.update { it.copy(isLoading = false) }
-                    _effect.send(CheckoutEffect.ShowToast(result.message ?: "Order Failed"))
+                    _effect.send(CheckoutEffect.NavigateToFailure(result.message ?: "Unknown Error"))
                 }
-                is NetworkResult.Loading -> { /* No-op */ }
+                is NetworkResult.Loading -> { }
             }
         }
     }

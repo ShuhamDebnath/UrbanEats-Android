@@ -32,7 +32,8 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun CheckoutRoute(
-    onOrderSuccess: () -> Unit,
+    onOrderSuccess: (String) -> Unit,
+    onOrderFailure: (String) -> Unit,
     onBackClick: () -> Unit,
     viewModel: CheckoutViewModel = koinViewModel()
 ) {
@@ -42,7 +43,8 @@ fun CheckoutRoute(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is CheckoutEffect.NavigateToSuccess -> onOrderSuccess()
+                is CheckoutEffect.NavigateToSuccess -> onOrderSuccess(effect.orderId)
+                is CheckoutEffect.NavigateToFailure -> onOrderFailure(effect.reason)
                 is CheckoutEffect.ShowToast -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_LONG).show()
                 }
