@@ -15,6 +15,7 @@ import com.shuham.urbaneats.domain.repository.CartRepository
 import com.shuham.urbaneats.domain.repository.OrderRepository
 import com.shuham.urbaneats.domain.repository.ProductRepository
 import com.shuham.urbaneats.domain.usecase.auth.LoginUseCase
+import com.shuham.urbaneats.domain.usecase.auth.SignUpUseCase
 import com.shuham.urbaneats.domain.usecase.cart.AddToCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.GetCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.PlaceOrderUseCase
@@ -37,7 +38,9 @@ import com.shuham.urbaneats.presentation.login.LoginViewModel
 import com.shuham.urbaneats.presentation.orders.OrdersViewModel
 import com.shuham.urbaneats.presentation.profile.ProfileViewModel
 import com.shuham.urbaneats.presentation.search.SearchViewModel
+import com.shuham.urbaneats.presentation.signup.SignUpViewModel
 import com.shuham.urbaneats.presentation.splash.SplashViewModel
+import com.shuham.urbaneats.presentation.track_order.TrackOrderViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -76,6 +79,7 @@ val appModule = module {
     factoryOf(::GetOrdersUseCase)
     factoryOf(::ToggleFavoriteUseCase)
     factoryOf(::GetFavoritesUseCase)
+    factoryOf(::SignUpUseCase)
 
 
     // 4. ViewModel
@@ -89,6 +93,8 @@ val appModule = module {
     viewModelOf(::OrdersViewModel)
     viewModelOf(::FavoritesViewModel)
     viewModelOf(::SearchViewModel)
+    viewModelOf(::TrackOrderViewModel)
+    viewModelOf(::SignUpViewModel)
 
     // 1. Provide Database Instance (Singleton)
     single {

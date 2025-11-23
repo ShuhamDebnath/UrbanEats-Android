@@ -36,6 +36,18 @@ object OrdersRoute
 @Serializable
 object FavoritesRoute
 
+//@Serializable
+//object OrderSuccessRoute
+//
+//@Serializable
+//object TrackOrderRoute
+
+@Serializable
+data class OrderSuccessRoute(val orderId: String)
+
+@Serializable
+data class TrackOrderRoute(val orderId: String)
+
 // 2. Use Data Classes for screens WITH arguments
 @Serializable
 data class DetailsRoute(

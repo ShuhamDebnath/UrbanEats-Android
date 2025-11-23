@@ -6,15 +6,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
@@ -44,7 +44,8 @@ fun CartRoute(
         state = state,
         onIncrement = viewModel::incrementQuantity,
         onDecrement = viewModel::decrementQuantity,
-        onCheckout = onCheckoutClick
+        onCheckout = onCheckoutClick,
+        onClearAll = { /* Implement Clear All */ }
     )
 }
 
@@ -55,64 +56,100 @@ fun CartScreen(
     state: CartState,
     onIncrement: (String, Int) -> Unit,
     onDecrement: (String, Int) -> Unit,
-    onCheckout: () -> Unit
+    onCheckout: () -> Unit,
+    onClearAll: () -> Unit
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFFF5F5F5), // Light Gray Background from screenshot
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("My Cart", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                    containerColor = Color(0xFFF5F5F5)
+                ),
+                actions = {
+                    Text(
+                        text = "Clear all",
+                        color = Color(0xFFE65100), // Orange
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .clickable { onClearAll() }
+                    )
+                },
+                navigationIcon = {
+                    // Optional Back Icon
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.padding(start = 16.dp))
+                }
             )
         },
         bottomBar = {
             if (state.summary.items.isNotEmpty()) {
-                CartSummaryFooter(total = state.summary.totalPrice, onCheckout = onCheckout)
+                // Sticky Button Container
+                Surface(
+                    color = Color.White,
+                    shadowElevation = 16.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = onCheckout,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(50), // Fully rounded pill
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+                    ) {
+                        Text("Proceed to Checkout", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     ) { innerPadding ->
         if (state.summary.items.isEmpty()) {
-            // ENHANCED EMPTY STATE
-            Box(
-                modifier = Modifier.padding(innerPadding).fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = null,
-                        modifier = Modifier.size(100.dp),
-                        tint = Color.LightGray.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text("Your cart is empty", style = MaterialTheme.typography.headlineSmall, color = Color.Gray)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Go find some cravings!", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    // Optional: You can add a button here to navigate back to Home if navigation was passed down
-                }
+            // Empty State
+            Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Your cart is empty", color = Color.Gray)
             }
         } else {
             LazyColumn(
                 contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding() + 16.dp,
                     bottom = innerPadding.calculateBottomPadding() + 16.dp,
-                    start = 24.dp,
-                    end = 24.dp
+                    start = 16.dp,
+                    end = 16.dp
                 ),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxSize()
             ) {
+                // 1. Cart Items
                 items(state.summary.items) { item ->
                     CartItemCard(item, onIncrement, onDecrement)
+                }
+
+                // 2. Upsell Section (Complete your meal)
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Complete your meal",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    UpsellSection()
+                }
+
+                // 3. Bill Details Card
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    CartBillCard(total = state.summary.totalPrice)
                 }
             }
         }
     }
 }
 
-// 3. PREMIUM ITEM CARD
+// 3. ITEM CARD (Matches Screenshot)
 @Composable
 fun CartItemCard(
     item: CartItemEntity,
@@ -120,103 +157,148 @@ fun CartItemCard(
     onDecrement: (String, Int) -> Unit
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(0.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(16.dp), ambientColor = Color.Gray.copy(0.05f), spotColor = Color.Gray.copy(0.05f))
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Image
             AsyncImage(
                 model = item.imageUrl,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Color.LightGray),
                 contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.width(16.dp))
 
+            // Info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.name,
-                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    maxLines = 1
+                )
+                Text(
+                    text = "Extra chili, No egg", // Dummy customization text
+                    color = Color.Gray,
+                    fontSize = 12.sp,
                     maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "$${item.price}",
-                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    fontSize = 16.sp
                 )
             }
 
-            // Qty Controls
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background, RoundedCornerShape(50))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                Icon(
-                    imageVector = if (item.quantity == 1) Icons.Default.DeleteOutline else Icons.Default.Remove,
-                    contentDescription = "Remove",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(RoundedCornerShape(50))
-                        .clickable { onDecrement(item.productId, item.quantity) }
-                        .padding(4.dp),
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
+            // Qty Controls (Circular Buttons)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Minus Button
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFFF5F5F5), // Light Gray
+                    modifier = Modifier.size(32.dp).clickable { onDecrement(item.productId, item.quantity) }
+                ) {
+                    Icon(Icons.Default.Remove, null, modifier = Modifier.padding(8.dp), tint = Color.Black)
+                }
 
-                Text(
-                    text = "${item.quantity}",
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(text = "${item.quantity}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Spacer(modifier = Modifier.width(12.dp))
 
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(RoundedCornerShape(50))
-                        .clickable { onIncrement(item.productId, item.quantity) }
-                        .padding(4.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                // Plus Button
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFFE65100), // Orange
+                    modifier = Modifier.size(32.dp).clickable { onIncrement(item.productId, item.quantity) }
+                ) {
+                    Icon(Icons.Default.Add, null, modifier = Modifier.padding(8.dp), tint = Color.White)
+                }
             }
         }
     }
 }
 
-// 4. COLLAPSIBLE PREMIUM FOOTER
+// 4. UPSELL SECTION (Horizontal Scroll)
 @Composable
-fun CartSummaryFooter(total: Double, onCheckout: () -> Unit) {
-    var isExpanded by remember { mutableStateOf(false) }
-    // FIX: State for the text field
-    var promoCode by remember { mutableStateOf("") }
+fun UpsellSection() {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        items(3) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.width(140.dp)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    AsyncImage(
+                        model = "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500", // Coke
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .align(Alignment.CenterHorizontally)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Coca-Cola", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("$2.50", color = Color.Gray, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {},
+                        modifier = Modifier.fillMaxWidth().height(32.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFE0B2)), // Light Orange
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text("Add", color = Color(0xFFE65100), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
 
+// 5. BILL CARD (Expandable)
+@Composable
+fun CartBillCard(total: Double) {
+    var isExpanded by remember { mutableStateOf(false) }
     val rotationState by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f, label = "Rotation")
 
-    // We use the Surface to draw the background
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        shadowElevation = 16.dp,
-        modifier = Modifier.fillMaxWidth() // Ensure it takes width
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(0.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(24.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            // Collapsible Details
+            AnimatedVisibility(visible = isExpanded) {
+                Column {
+                    BillRow("Subtotal", total)
+                    BillRow("Delivery Fee", 5.00)
+                    BillRow("Tax (10%)", total * 0.10)
 
-            // 1. Header Row (Total + Expand Icon)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 16.dp),
+                        thickness = 1.dp, // Dotted line simulation
+                        color = Color.LightGray.copy(alpha = 0.3f)
+                    )
+                }
+            }
+
+            // Total Row (Always Visible)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -224,81 +306,24 @@ fun CartSummaryFooter(total: Double, onCheckout: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text("Total", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-                    val finalTotal = total + 2.00 + (total * 0.05)
-                    Text(
-                        "$${String.format("%.2f", finalTotal)}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(if(isExpanded) "Hide Details" else "View Bill", color = MaterialTheme.colorScheme.primary)
+                    Text("Total", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
-                        imageVector = Icons.Default.KeyboardArrowUp,
-                        contentDescription = "Toggle Details",
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Toggle",
                         modifier = Modifier.rotate(rotationState),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = Color.Gray
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 2. Expandable Details (Bill Breakdown + Promo)
-            AnimatedVisibility(visible = isExpanded) {
-                Column {
-                    // Promo Code - FIXED: Now uses 'promoCode' state
-                    OutlinedTextField(
-                        value = promoCode,
-                        onValueChange = { promoCode = it },
-                        placeholder = { Text("Promo Code") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                            focusedContainerColor = MaterialTheme.colorScheme.background,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = MaterialTheme.colorScheme.primary
-                        ),
-                        trailingIcon = {
-                            Button(
-                                onClick = { /* TODO: Validate Code Logic */ },
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                modifier = Modifier.padding(end = 4.dp).height(36.dp)
-                            ) {
-                                Text("Apply")
-                            }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Bill Rows
-                    BillRow(label = "Subtotal", amount = total)
-                    BillRow(label = "Delivery Fee", amount = 2.00)
-                    BillRow(label = "Tax (5%)", amount = total * 0.05)
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        thickness = DividerDefaults.Thickness,
-                        color = Color.LightGray.copy(0.3f)
-                    )
-                }
-            }
-
-            // 3. Checkout Button (Always Visible)
-            Button(
-                onClick = onCheckout,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text("Checkout", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                val finalTotal = total + 5.00 + (total * 0.10)
+                Text(
+                    "$${String.format("%.2f", finalTotal)}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFE65100)
+                )
             }
         }
     }
@@ -310,7 +335,7 @@ fun BillRow(label: String, amount: Double) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = Color.Gray)
-        Text("$${String.format("%.2f", amount)}", fontWeight = FontWeight.SemiBold)
+        Text(label, color = Color.Gray, fontSize = 14.sp)
+        Text("$${String.format("%.2f", amount)}", fontWeight = FontWeight.Medium, fontSize = 14.sp)
     }
 }

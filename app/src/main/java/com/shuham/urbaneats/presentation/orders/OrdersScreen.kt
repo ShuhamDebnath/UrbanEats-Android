@@ -1,6 +1,7 @@
 package com.shuham.urbaneats.presentation.orders
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,10 +27,16 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun OrdersRoute(
     onBackClick: () -> Unit,
+    onOrderClick: (Order) -> Unit,
     viewModel: OrdersViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    OrdersScreen(state = state, onBackClick = onBackClick, onRefresh = viewModel::fetchOrders)
+    OrdersScreen(
+        state = state,
+        onBackClick = onBackClick,
+        onRefresh = viewModel::fetchOrders,
+        onOrderClick = onOrderClick
+    )
 }
 
 // 2. SCREEN
@@ -38,7 +45,8 @@ fun OrdersRoute(
 fun OrdersScreen(
     state: OrdersState,
     onBackClick: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onOrderClick: (Order) -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -61,20 +69,28 @@ fun OrdersScreen(
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (state.error != null) {
                 Text(state.error, color = Color.Red, modifier = Modifier.align(Alignment.Center))
             } else if (state.orders.isEmpty()) {
-                Text("No orders yet", color = Color.Gray, modifier = Modifier.align(Alignment.Center))
+                Text(
+                    "No orders yet",
+                    color = Color.Gray,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(state.orders) { order ->
-                        OrderCard(order)
+                        OrderCard(order, onOrderClick)
                     }
                 }
             }
@@ -84,7 +100,10 @@ fun OrdersScreen(
 
 // 3. PREMIUM CARD
 @Composable
-fun OrderCard(order: Order) {
+fun OrderCard(
+    order: Order,
+    onOrderClick: (Order) -> Unit
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -92,7 +111,12 @@ fun OrderCard(order: Order) {
         // Add a subtle border for structure
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable {
+                    onOrderClick(order)
+                }) {
             // Header: Date + Status
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -106,14 +130,16 @@ fun OrderCard(order: Order) {
 
                 // Status Chip
                 Surface(
-                    color = if(order.status == "Delivered") Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
+                    color = if (order.status == "Delivered") Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
                     shape = RoundedCornerShape(50),
                 ) {
                     Text(
                         text = order.status,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if(order.status == "Delivered") Color(0xFF2E7D32) else Color(0xFFEF6C00),
+                        color = if (order.status == "Delivered") Color(0xFF2E7D32) else Color(
+                            0xFFEF6C00
+                        ),
                         fontWeight = FontWeight.Bold
                     )
                 }

@@ -7,4 +7,6 @@ import com.shuham.urbaneats.domain.model.AuthResponse
 
 interface AuthRepository {
     suspend fun login(request: AuthRequest): NetworkResult<AuthResponse>
+
+    suspend fun register(name: String, email: String, pass: String): NetworkResult<AuthResponse>
 }

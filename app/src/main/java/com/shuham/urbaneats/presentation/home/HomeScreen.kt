@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +35,8 @@ import com.shuham.urbaneats.presentation.components.FoodItemCard
 import com.shuham.urbaneats.presentation.components.FoodItemShimmer
 import com.shuham.urbaneats.presentation.home.components.Category
 import com.shuham.urbaneats.presentation.home.components.CategorySection
+import com.shuham.urbaneats.presentation.home.components.DailyDealsSection
+import com.shuham.urbaneats.presentation.home.components.RestaurantCard
 import org.koin.androidx.compose.koinViewModel
 
 // ==========================================
@@ -44,18 +48,13 @@ fun HomeRoute(
     onFoodClick: (Product) -> Unit,
     onCartClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onSearchClick: () -> Unit // <--- New Navigation Event
+    onSearchClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
     HomeScreen(
         state = state,
-        onRefresh = viewModel::refreshData,
         onProductClick = onFoodClick,
-        onCartClick = onCartClick,
-        onProfileClick = onProfileClick,
-        onSearchClick = onSearchClick, // <--- Pass it down
-        onFavoriteClick = viewModel::toggleFavorite
+        onProfileClick = onProfileClick
     )
 }
 
@@ -66,87 +65,112 @@ fun HomeRoute(
 @Composable
 fun HomeScreen(
     state: HomeState,
-    onRefresh: () -> Unit,
     onProductClick: (Product) -> Unit,
-    onCartClick: () -> Unit,
-    onProfileClick: () -> Unit,
-    onSearchClick: () -> Unit,
-    onFavoriteClick: (Product) -> Unit
+    onProfileClick: () -> Unit
 ) {
     val categories = remember {
-        listOf(Category("all", "All", "🍽️"), Category("burger", "Burgers", "🍔"), Category("pizza", "Pizza", "🍕"), Category("asian", "Asian", "🍣"), Category("dessert", "Dessert", "🍩"))
+        listOf(
+            Category("burger", "Burger"),
+            Category("pizza", "Pizza"),
+            Category("sushi", "Sushi"),
+            Category("vegan", "Vegan")
+        )
     }
-    var selectedCategory by remember { mutableStateOf("all") }
+    var selectedCategory by remember { mutableStateOf("burger") }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color.White,
         topBar = {
-            // Clean Top Bar (No Search Box)
-            Row(
+            // --- FIXED HEADER SECTION (Address + Categories) ---
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .statusBarsPadding()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .background(Color.White)
+                    .statusBarsPadding() // Handles the status bar space
             ) {
-                // Location / Title Section
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Deliver to",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                // 1. Address Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.LocationOn,
+                            imageVector = Icons.Default.KeyboardArrowDown,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
+                            tint = Color.Black
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Home, 123 St",
+                            text = "Deliver to: 123 Main St...",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            fontWeight = FontWeight.Bold
                         )
+                    }
+
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFFF5F5F5),
+                        modifier = Modifier.size(40.dp).clickable { onProfileClick() }
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            Icons.Default.Person,
+                            null,
+                            modifier = Modifier.padding(8.dp),
+                            tint = Color.Black
                         )
                     }
                 }
+
+                // 2. Categories (Now Fixed at Top)
+                CategorySection(
+                    categories = categories,
+                    selectedCategory = selectedCategory,
+                    onCategoryClick = { selectedCategory = it }
+                )
+
+                // Optional: Divider to separate fixed header from scrolling content
+                HorizontalDivider(thickness = 1.dp, color = Color.LightGray.copy(alpha = 0.2f))
             }
         }
     ) { innerPadding ->
+        // --- SCROLLABLE CONTENT SECTION ---
         LazyColumn(
-            contentPadding = PaddingValues(top = innerPadding.calculateTopPadding() + 16.dp, bottom = 100.dp),
+            contentPadding = PaddingValues(
+                top = innerPadding.calculateTopPadding(), // Starts below the Categories
+                bottom = 100.dp
+            ),
             modifier = Modifier.fillMaxSize()
         ) {
+            // 1. Daily Deals
             item {
-                CategorySection(categories, selectedCategory) { selectedCategory = it }
+                Spacer(modifier = Modifier.height(16.dp)) // Top spacing
+                DailyDealsSection()
                 Spacer(modifier = Modifier.height(24.dp))
             }
+
+            // 2. Popular Section Title
             item {
-                Text("Popular Restaurants", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 24.dp))
+                Text(
+                    text = "Popular Near You",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // 3. Vertical Product List
             if (state.isLoading && state.products.isEmpty()) {
                 items(3) { FoodItemShimmer() }
             } else {
                 items(state.products) { product ->
-                    Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-                        FoodItemCard(
-                            foodProduct = product,
-                            onAddClick = { },
-                            onItemClick = { onProductClick(product) },
-                            onFavoriteClick = { onFavoriteClick(product) }
-                        )
-                    }
+                    RestaurantCard(
+                        product = product,
+                        onClick = { onProductClick(product) }
+                    )
                 }
             }
         }
@@ -164,10 +188,6 @@ fun HomeScreen(
 private fun HomeScreenPrev() {
     HomeScreen(
         HomeState(),
-        {},
-        {},
-        {},
-        {},
         {},
         {},
     )

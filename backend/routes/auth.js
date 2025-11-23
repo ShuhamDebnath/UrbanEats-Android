@@ -22,7 +22,19 @@ router.post('/register', async (req, res) => {
         });
 
         const savedUser = await user.save();
-        res.send({ user: savedUser._id });
+
+        // 4. Generate Token IMMEDIATELY (Critical for Auto-Login)
+        const token = jwt.sign({ _id: savedUser._id }, process.env.TOKEN_SECRET || 'secretKey123');
+
+        // 5. Return Token + User Info (Matches Android AuthResponse)
+        res.header('auth-token', token).send({
+            token: token,
+            user: {
+                id: savedUser._id,
+                name: savedUser.name,
+                email: savedUser.email
+            }
+        });
 
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -41,7 +53,6 @@ router.post('/login', async (req, res) => {
         if (!validPass) return res.status(400).send({ message: 'Invalid password' });
 
         // 3. Create and assign token
-        // In a real app, use a long random string in .env for the secret
         const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET || 'secretKey123');
 
         // 4. Send back the token and user info

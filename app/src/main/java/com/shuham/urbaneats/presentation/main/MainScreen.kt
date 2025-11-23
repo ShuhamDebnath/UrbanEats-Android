@@ -1,5 +1,8 @@
 package com.shuham.urbaneats.presentation.main
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -11,7 +14,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -22,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.shuham.urbaneats.presentation.cart.CartRoute
 import com.shuham.urbaneats.presentation.checkout.CheckoutRoute
+import com.shuham.urbaneats.presentation.checkout.OrderSuccessRoute
 import com.shuham.urbaneats.presentation.details.DetailRoute
 import com.shuham.urbaneats.presentation.favorites.FavoritesRoute
 import com.shuham.urbaneats.presentation.favorites.FavoritesState
@@ -31,12 +39,15 @@ import com.shuham.urbaneats.presentation.navigation.CheckoutRoute
 import com.shuham.urbaneats.presentation.navigation.DetailsRoute
 import com.shuham.urbaneats.presentation.navigation.FavoritesRoute
 import com.shuham.urbaneats.presentation.navigation.HomeRoute
+import com.shuham.urbaneats.presentation.navigation.OrderSuccessRoute
 import com.shuham.urbaneats.presentation.navigation.OrdersRoute
 import com.shuham.urbaneats.presentation.navigation.ProfileRoute
 import com.shuham.urbaneats.presentation.navigation.SearchRoute
+import com.shuham.urbaneats.presentation.navigation.TrackOrderRoute
 import com.shuham.urbaneats.presentation.orders.OrdersRoute
 import com.shuham.urbaneats.presentation.profile.ProfileRoute
 import com.shuham.urbaneats.presentation.search.SearchRoute
+import com.shuham.urbaneats.presentation.track_order.TrackOrderRoute
 import kotlinx.serialization.Serializable
 
 // Define the Tab Structure
@@ -73,32 +84,53 @@ fun MainScreen(
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
+                // Clean White Navigation Bar
                 NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp
                 ) {
                     topLevelRoutes.forEach { screen ->
-                        val isSelected = currentDestination?.hierarchy?.any { it.hasRoute(screen.route::class) } == true
+                        val isSelected =
+                            currentDestination?.hierarchy?.any { it.hasRoute(screen.route::class) } == true
+
+                        // ANIMATION: Bouncy Scale
+                        val scale by animateFloatAsState(
+                            targetValue = if (isSelected) 1.1f else 1.0f, // Scale up slightly when selected
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            ),
+                            label = "Icon Scale"
+                        )
 
                         NavigationBarItem(
-                            icon = { Icon(screen.icon, contentDescription = screen.label) },
-                            label = { Text(screen.label) },
+                            icon = {
+                                Icon(
+                                    imageVector = screen.icon,
+                                    contentDescription = screen.label,
+                                    modifier = Modifier.scale(scale) // Apply Animation
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = screen.label,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
                             selected = isSelected,
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                selectedIconColor = Color(0xFFE65100), // Brand Orange
+                                selectedTextColor = Color(0xFFE65100),
+                                indicatorColor = Color(0xFFFFF3E0), // Light Peach Pill
+                                unselectedIconColor = Color.Gray,
+                                unselectedTextColor = Color.Gray
                             ),
                             onClick = {
                                 navController.navigate(screen.route) {
-                                    // Pop up to the start destination of the graph to
-                                    // avoid building up a large stack of destinations
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
                                     }
-                                    // Avoid multiple copies of the same destination
                                     launchSingleTop = true
-                                    // Restore state when reselecting a previously selected item
                                     restoreState = true
                                 }
                             }
@@ -116,12 +148,21 @@ fun MainScreen(
             // 1. HOME TAB
             composable<HomeRoute> {
                 HomeRoute(
-                    onFoodClick = { product -> navController.navigate(DetailsRoute(product.id, product.name)) },
+                    onFoodClick = { product ->
+                        navController.navigate(
+                            DetailsRoute(
+                                product.id,
+                                product.name
+                            )
+                        )
+                    },
                     onCartClick = { navController.navigate(CartRoute) },
                     onProfileClick = { navController.navigate(ProfileRoute) },
                     onSearchClick = {
                         navController.navigate(SearchRoute) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -158,8 +199,11 @@ fun MainScreen(
 
             // ORDERS
             composable<OrdersRoute> {
+
                 OrdersRoute(
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onOrderClick = { order -> navController.navigate(TrackOrderRoute(order.id)) }
+
                 )
             }
             // FAVORITES
@@ -185,12 +229,37 @@ fun MainScreen(
             composable<CheckoutRoute> {
                 CheckoutRoute(
                     onOrderSuccess = {
-                        navController.navigate(HomeRoute) {
-                            popUpTo(HomeRoute) { inclusive = true }
+                        navController.navigate(OrderSuccessRoute) {
+                            popUpTo(OrderSuccessRoute) { inclusive = true }
                         }
                     },
                     onBackClick = { navController.popBackStack() }
                 )
+            }
+
+            composable<OrderSuccessRoute> { backStackEntry ->
+                val args = backStackEntry.toRoute<OrderSuccessRoute>()
+
+                OrderSuccessRoute(
+                    onHomeClick = {
+                        navController.navigate(HomeRoute) {
+                            popUpTo(HomeRoute) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    onTrackClick = {
+                        // Navigate to Tracking with the ID
+                        navController.navigate(TrackOrderRoute(args.orderId)) {
+                            // Clear Success screen from stack
+                            popUpTo(HomeRoute)
+                        }
+                    }
+                )
+            }
+
+            composable<TrackOrderRoute> {
+                TrackOrderRoute(onBackClick = { navController.popBackStack() })
             }
         }
     }

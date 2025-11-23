@@ -17,7 +17,9 @@ import com.shuham.urbaneats.presentation.login.LoginRoute
 import com.shuham.urbaneats.presentation.main.MainScreen
 import com.shuham.urbaneats.presentation.navigation.LoginRoute
 import com.shuham.urbaneats.presentation.navigation.MainAppRoute
+import com.shuham.urbaneats.presentation.navigation.SignUpRoute
 import com.shuham.urbaneats.presentation.navigation.SplashRoute
+import com.shuham.urbaneats.presentation.signup.SignUpRoute
 import com.shuham.urbaneats.presentation.splash.SplashRoute
 import com.shuham.urbaneats.ui.theme.UrbanEatsTheme
 import org.koin.compose.KoinContext
@@ -80,11 +82,26 @@ class MainActivity : ComponentActivity() {
                                         popUpTo(LoginRoute) { inclusive = true }
                                     }
                                 },
-                                onNavigateToSignUp = { /* ... */ }
+                                onNavigateToSignUp = {
+                                    navController.navigate(SignUpRoute)
+                                }
+                            )
+                        }
+                        // 3. SIGNUP
+                        composable<SignUpRoute> {
+                            SignUpRoute(
+                                onNavigateToHome = {
+                                    navController.navigate(MainAppRoute) {
+                                        popUpTo(SignUpRoute) { inclusive = true }
+                                    }
+                                },
+                                onNavigateToLogin = {
+                                    navController.navigate(LoginRoute)
+                                }
                             )
                         }
 
-                        // 3. MAIN APP CONTAINER (Holds Bottom Bar)
+                        // 4. MAIN APP CONTAINER (Holds Bottom Bar)
                         composable<MainAppRoute> {
                             MainScreen(
                                 onLogout = {
