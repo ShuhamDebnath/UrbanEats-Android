@@ -41,94 +41,94 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             UrbanEatsTheme {
-                KoinContext {
 
-                    // ASK FOR PERMISSION (Android 13+)
-                    GrantNotificationPermission()
+                // ASK FOR PERMISSION (Android 13+)
+                GrantNotificationPermission()
 
-                    val navController = rememberNavController()
+                val navController = rememberNavController()
 
-                    NavHost(
-                        navController = navController,
-                        startDestination = SplashRoute
-                    ) {
+                NavHost(
+                    navController = navController,
+                    startDestination = SplashRoute
+                ) {
 
-                        // 1. SPLASH
-                        composable<SplashRoute> {
-                            SplashRoute(
-                                onNavigateToHome = {
-                                    navController.navigate(MainAppRoute) {
-                                        popUpTo(SplashRoute) { inclusive = true }
-                                    }
-                                },
-                                onNavigateToLogin = {
-                                    navController.navigate(LoginRoute) {
-                                        popUpTo(SplashRoute) { inclusive = true }
-                                    }
+                    // 1. SPLASH
+                    composable<SplashRoute> {
+                        SplashRoute(
+                            onNavigateToHome = {
+                                navController.navigate(MainAppRoute) {
+                                    popUpTo(SplashRoute) { inclusive = true }
                                 }
-                            )
-                        }
-
-                        // 2. LOGIN
-                        composable<LoginRoute> {
-                            LoginRoute(
-                                onNavigateToHome = {
-                                    navController.navigate(MainAppRoute) {
-                                        popUpTo(LoginRoute) { inclusive = true }
-                                    }
-                                },
-                                onNavigateToSignUp = {
-                                    navController.navigate(SignUpRoute)
+                            },
+                            onNavigateToLogin = {
+                                navController.navigate(LoginRoute) {
+                                    popUpTo(SplashRoute) { inclusive = true }
                                 }
-                            )
-                        }
+                            }
+                        )
+                    }
 
-                        // 3. SIGN UP
-                        composable<SignUpRoute> {
-                            // Ensure you created SignUpRoute in the previous step or import it
-                            com.shuham.urbaneats.presentation.signup.SignUpRoute(
-                                onNavigateToHome = {
-                                    navController.navigate(MainAppRoute) {
-                                        popUpTo(LoginRoute) { inclusive = true }
-                                        popUpTo(SignUpRoute) { inclusive = true }
-                                    }
-                                },
-                                onNavigateToLogin = {
+                    // 2. LOGIN
+                    composable<LoginRoute> {
+                        LoginRoute(
+                            onNavigateToHome = {
+                                navController.navigate(MainAppRoute) {
+                                    popUpTo(LoginRoute) { inclusive = true }
+                                }
+                            },
+                            onNavigateToSignUp = {
+                                navController.navigate(SignUpRoute)
+                            }
+                        )
+                    }
+
+                    // 3. SIGN UP
+                    composable<SignUpRoute> {
+                        // Ensure you created SignUpRoute in the previous step or import it
+                        com.shuham.urbaneats.presentation.signup.SignUpRoute(
+                            onNavigateToHome = {
+                                navController.navigate(MainAppRoute) {
+                                    popUpTo(LoginRoute) { inclusive = true }
+                                    popUpTo(SignUpRoute) { inclusive = true }
+                                }
+                            },
+                            onNavigateToLogin = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+
+                    // 4. MAIN APP CONTAINER
+                    composable<MainAppRoute> {
+                        MainScreen(
+                            onLogout = {
+                                navController.navigate(LoginRoute) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
+                    // 5. GLOBAL NO INTERNET SCREEN
+                    composable<NoInternetRoute> {
+                        NoInternetScreen(
+                            onRetry = {
+                                // THE LOGIC IS HERE
+                                if (NetworkUtils.isNetworkAvailable(this@MainActivity)) {
+                                    // Internet is back! Go back to previous screen
                                     navController.popBackStack()
+                                } else {
+                                    // Still no internet
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Internet is still unavailable",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
-                            )
-                        }
-
-                        // 4. MAIN APP CONTAINER
-                        composable<MainAppRoute> {
-                            MainScreen(
-                                onLogout = {
-                                    navController.navigate(LoginRoute) {
-                                        popUpTo(0) { inclusive = true }
-                                    }
-                                }
-                            )
-                        }
-
-                        // 5. GLOBAL NO INTERNET SCREEN
-                        composable<NoInternetRoute> {
-                            NoInternetScreen(
-                                onRetry = {
-                                    // THE LOGIC IS HERE
-                                    if (NetworkUtils.isNetworkAvailable(this@MainActivity)) {
-                                        // Internet is back! Go back to previous screen
-                                        navController.popBackStack()
-                                    } else {
-                                        // Still no internet
-                                        Toast.makeText(this@MainActivity, "Internet is still unavailable", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            )
-                        }
+                            }
+                        )
                     }
                 }
-
-
             }
         }
     }

@@ -27,24 +27,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.shuham.urbaneats.domain.model.Address
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun CheckoutRoute(
     onOrderSuccess: (String) -> Unit,
     onOrderFailure: (String) -> Unit,
+    onNoInternet: () -> Unit,
+    onEditAddress: () -> Unit,
     onBackClick: () -> Unit,
-    viewModel: CheckoutViewModel = koinViewModel()
+    viewModel: CheckoutViewModel = koinViewModel(),
+
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is CheckoutEffect.NavigateToSuccess -> onOrderSuccess(effect.orderId)
                 is CheckoutEffect.NavigateToFailure -> onOrderFailure(effect.reason)
+                is CheckoutEffect.NavigateToNoInternet -> onNoInternet()
                 is CheckoutEffect.ShowToast -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_LONG).show()
                 }
@@ -56,7 +63,8 @@ fun CheckoutRoute(
         state = state,
         onAddressChange = viewModel::onAddressChange,
         onPlaceOrder = viewModel::placeOrder,
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
+        onEditAddress = onEditAddress
     )
 }
 
@@ -64,51 +72,14 @@ fun CheckoutRoute(
 @Composable
 fun CheckoutScreen(
     state: CheckoutState,
-    onAddressChange: (String) -> Unit,
+    onAddressChange: (Address) -> Unit,
     onPlaceOrder: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onEditAddress: () -> Unit
 ) {
     // Local state for UI selection (Dummy for now)
     var selectedDelivery by remember { mutableStateOf("Priority") }
     var selectedPayment by remember { mutableStateOf("Visa") }
-
-    // Dialog State
-    var showAddressDialog by remember { mutableStateOf(false) }
-
-    // 1. ADDRESS INPUT DIALOG
-    if (showAddressDialog) {
-        var tempAddress by remember { mutableStateOf(state.address) }
-        AlertDialog(
-            onDismissRequest = { showAddressDialog = false },
-            title = { Text("Delivery Address") },
-            text = {
-                OutlinedTextField(
-                    value = tempAddress,
-                    onValueChange = { tempAddress = it },
-                    label = { Text("Enter full address") },
-                    modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onAddressChange(tempAddress) // Update ViewModel
-                        showAddressDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
-                ) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddressDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
-                }
-            },
-            containerColor = Color.White
-        )
-    }
 
 
     Scaffold(
@@ -134,7 +105,7 @@ fun CheckoutScreen(
             ) {
                 Button(
                     onClick = onPlaceOrder,
-                    enabled = !state.isLoading && state.address.isNotBlank(),
+                    enabled = !state.isLoading && state.address != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -166,27 +137,15 @@ fun CheckoutScreen(
         ) {
             // 1. Delivery Address Section
             item {
-                SectionHeader("Delivery Address", "Edit") { showAddressDialog = true }
+                SectionHeader("Delivery Address", "Change") { onEditAddress() } // <--- Trigger Nav
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Show ACTUAL state address or a prompt to add one
-                val displayAddress = if (state.address.isBlank()) "Add Delivery Address" else state.address
-                val textColor = if (state.address.isBlank()) Color(0xFFE65100) else Color.Gray
+                val displayAddress = state.address ?: Address(label = "Address", fullAddress = "Add Address")
 
                 AddressCard(
                     address = displayAddress,
-                    textColor = textColor,
-                    onClick = { showAddressDialog = true }
+                    onClick = { onEditAddress() } // Clicking card also triggers nav
                 )
-
-                if (state.error != null) {
-                    Text(
-                        text = state.error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
             }
 
             // 2. Delivery Options Section
@@ -271,7 +230,7 @@ fun SectionHeader(title: String, actionText: String, onAction: () -> Unit) {
 
 
 @Composable
-fun AddressCard(address: String, textColor: Color = Color.Gray, onClick: () -> Unit) {
+fun AddressCard(address: Address, textColor: Color = Color.Gray, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -295,10 +254,10 @@ fun AddressCard(address: String, textColor: Color = Color.Gray, onClick: () -> U
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text("Home", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(address.label, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = address,
+                    text = address.fullAddress,
                     color = textColor,
                     fontSize = 14.sp,
                     lineHeight = 20.sp,

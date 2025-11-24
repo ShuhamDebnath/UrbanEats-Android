@@ -8,20 +8,27 @@ import com.shuham.urbaneats.data.local.UrbanEatsDatabase
 import com.shuham.urbaneats.data.remote.KtorClient
 import com.shuham.urbaneats.data.repository.AuthRepositoryImpl
 import com.shuham.urbaneats.data.repository.CartRepositoryImpl
+import com.shuham.urbaneats.data.repository.CategoryRepositoryImpl
 import com.shuham.urbaneats.data.repository.OrderRepositoryImpl
 import com.shuham.urbaneats.data.repository.ProductRepositoryImpl
+import com.shuham.urbaneats.data.repository.UserRepositoryImpl
 import com.shuham.urbaneats.domain.repository.AuthRepository
 import com.shuham.urbaneats.domain.repository.CartRepository
+import com.shuham.urbaneats.domain.repository.CategoryRepository
 import com.shuham.urbaneats.domain.repository.OrderRepository
 import com.shuham.urbaneats.domain.repository.ProductRepository
+import com.shuham.urbaneats.domain.repository.UserRepository
 import com.shuham.urbaneats.domain.usecase.auth.LoginUseCase
 import com.shuham.urbaneats.domain.usecase.auth.SignUpUseCase
 import com.shuham.urbaneats.domain.usecase.cart.AddToCartUseCase
+import com.shuham.urbaneats.domain.usecase.cart.ClearCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.GetCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.PlaceOrderUseCase
 import com.shuham.urbaneats.domain.usecase.cart.RemoveFromCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.UpdateCartQuantityUseCase
+import com.shuham.urbaneats.domain.usecase.order.GetOrderDetailsUseCase
 import com.shuham.urbaneats.domain.usecase.order.GetOrdersUseCase
+import com.shuham.urbaneats.domain.usecase.product.GetCategoriesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetFavoritesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetMenuUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetProductDetailsUseCase
@@ -29,6 +36,7 @@ import com.shuham.urbaneats.domain.usecase.product.RefreshMenuUseCase
 import com.shuham.urbaneats.domain.usecase.product.SearchProductsUseCase
 import com.shuham.urbaneats.domain.usecase.product.ToggleFavoriteUseCase
 import com.shuham.urbaneats.domain.usecase.validation.ValidateEmailUseCase
+import com.shuham.urbaneats.presentation.address.AddressViewModel
 import com.shuham.urbaneats.presentation.cart.CartViewModel
 import com.shuham.urbaneats.presentation.checkout.CheckoutViewModel
 import com.shuham.urbaneats.presentation.details.DetailViewModel
@@ -38,6 +46,7 @@ import com.shuham.urbaneats.presentation.login.LoginViewModel
 import com.shuham.urbaneats.presentation.orders.OrdersViewModel
 import com.shuham.urbaneats.presentation.profile.ProfileViewModel
 import com.shuham.urbaneats.presentation.search.SearchViewModel
+import com.shuham.urbaneats.presentation.settings.SettingsViewModel
 import com.shuham.urbaneats.presentation.signup.SignUpViewModel
 import com.shuham.urbaneats.presentation.splash.SplashViewModel
 import com.shuham.urbaneats.presentation.track_order.TrackOrderViewModel
@@ -62,6 +71,8 @@ val appModule = module {
     singleOf(::ProductRepositoryImpl) bind ProductRepository::class
     singleOf(::CartRepositoryImpl) bind CartRepository::class
     singleOf(::OrderRepositoryImpl) bind OrderRepository::class
+    singleOf(::CategoryRepositoryImpl) bind CategoryRepository::class
+    singleOf(::UserRepositoryImpl) bind UserRepository::class
 
 
     // 3. UseCases
@@ -80,6 +91,10 @@ val appModule = module {
     factoryOf(::ToggleFavoriteUseCase)
     factoryOf(::GetFavoritesUseCase)
     factoryOf(::SignUpUseCase)
+    factoryOf(::ClearCartUseCase)
+    factoryOf(::GetCategoriesUseCase)
+    factoryOf(::AddressViewModel)
+    factoryOf(::GetOrderDetailsUseCase)
 
 
     // 4. ViewModel
@@ -95,6 +110,7 @@ val appModule = module {
     viewModelOf(::SearchViewModel)
     viewModelOf(::TrackOrderViewModel)
     viewModelOf(::SignUpViewModel)
+    viewModelOf(::SettingsViewModel)
 
     // 1. Provide Database Instance (Singleton)
     single {

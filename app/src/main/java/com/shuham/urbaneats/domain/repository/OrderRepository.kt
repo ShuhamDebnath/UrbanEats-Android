@@ -5,4 +5,5 @@ import com.shuham.urbaneats.util.NetworkResult
 
 interface OrderRepository {
     suspend fun getMyOrders(): NetworkResult<List<Order>>
+    suspend fun getOrderById(orderId: String): NetworkResult<Order>
 }

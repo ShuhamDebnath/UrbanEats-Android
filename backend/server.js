@@ -7,6 +7,8 @@ const cors = require('cors');
 const authRoute = require('./routes/auth');
 const productsRoute = require('./routes/products');
 const ordersRoute = require('./routes/orders');
+const categoriesRoute = require('./routes/categories');
+const userRoute = require('./routes/user');
 
 // Configuration
 dotenv.config();
@@ -23,8 +25,10 @@ mongoose.connect(process.env.DB_CONNECT || 'mongodb://127.0.0.1:27017/urbaneats'
 
 // Routes Middleware
 app.use('/api/auth', authRoute);
-app.use('/api/products', productsRoute); // <--- Connects the products file
+app.use('/api/products', productsRoute);
 app.use('/api/orders', ordersRoute);
+app.use('/api/categories', categoriesRoute);
+app.use('/api/user', userRoute);
 
 // Base Route
 app.get('/', (req, res) => {

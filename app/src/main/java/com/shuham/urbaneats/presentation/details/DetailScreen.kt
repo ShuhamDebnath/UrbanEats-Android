@@ -24,11 +24,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.shuham.urbaneats.domain.model.AddonOption
 import com.shuham.urbaneats.domain.model.Product
+import com.shuham.urbaneats.domain.model.SizeOption
+import com.shuham.urbaneats.presentation.details.SizeOption
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -38,8 +42,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun DetailRoute(
     foodId: String, // Passed from Navigation
-    onBackClick: () -> Unit,
-    viewModel: DetailViewModel = koinViewModel()
+    onGoToCart: () -> Unit,
+    onBackClick: () -> Unit, viewModel: DetailViewModel = koinViewModel()
 ) {
     // Trigger data fetch
     LaunchedEffect(foodId) { viewModel.loadProduct(foodId) }
@@ -50,18 +54,25 @@ fun DetailRoute(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+        snackbarHost = { SnackbarHost(snackbarHostState) }) { innerPadding ->
         // We pass innerPadding to avoid overlapping with snackbar, though Box usually handles it.
         Box(modifier = Modifier.padding(innerPadding)) {
             DetailScreen(
                 state = state,
                 onBackClick = onBackClick,
-                onAddToCart = {
-                    viewModel.addToCart()
-                    // Show Feedback
+                onAddToCart = { size, addons, qty, notes ->
+                    viewModel.addToCart(size, addons, qty, notes)
+
+                    // Show Snackbar with Action
                     scope.launch {
-                        snackbarHostState.showSnackbar("Added to Cart")
+                        val result = snackbarHostState.showSnackbar(
+                            message = "Added to Cart",
+                            actionLabel = "View Cart", // <--- CLICKABLE ACTION
+                            duration = SnackbarDuration.Short
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            onGoToCart() // <--- NAVIGATE
+                        }
                     }
                 },
                 onToggleFavorite = viewModel::toggleFavorite
@@ -77,32 +88,40 @@ fun DetailRoute(
 fun DetailScreen(
     state: DetailState,
     onBackClick: () -> Unit,
-    onAddToCart: () -> Unit,
+    onAddToCart: (SizeOption, Set<AddonOption>, Int, String) -> Unit,
     onToggleFavorite: () -> Unit
 ) {
     val scrollState = rememberLazyListState()
-    // Local state for options (Dummy for UI demo)
-    var selectedSize by remember { mutableStateOf("Regular") }
-    var extraCheese by remember { mutableStateOf(false) }
-    var extraAvocado by remember { mutableStateOf(false) }
-    var quantity by remember { mutableIntStateOf(1) }
     var specialInstructions by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    // DYNAMIC STATE
+    var selectedSize by remember(state.product) {
+        mutableStateOf(state.product?.sizes?.firstOrNull() ?: SizeOption("Regular", 0.0))
+    }
+
+    // Selected Addons (Set of objects)
+    var selectedAddons by remember { mutableStateOf(setOf<AddonOption>()) }
+    var quantity by remember { mutableIntStateOf(1) }
+
+    // Calculation Logic
+    val basePrice = state.product?.price ?: 0.0
+    val sizePrice = selectedSize.price
+    val addonsPrice = selectedAddons.sumOf { it.price }
+    val unitPrice = basePrice + sizePrice + addonsPrice
+    val finalTotalPrice = unitPrice * quantity
+
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
 
         if (state.isLoading || state.product == null) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
             val product = state.product
-
-            // --- DYNAMIC PRICE CALCULATION ---
-            val sizePrice = if (selectedSize == "Large") 3.00 else 0.00
-            val cheesePrice = if (extraCheese) 1.50 else 0.00
-            val avocadoPrice = if (extraAvocado) 2.00 else 0.00
-
-            val singleItemTotal = product.price + sizePrice + cheesePrice + avocadoPrice
-            val finalTotalPrice = singleItemTotal * quantity
-            // ----------------------------------
 
             // 1. Background Image (Fixed)
             AsyncImage(
@@ -151,9 +170,9 @@ fun DetailScreen(
                         .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                 ) {
                     Icon(
-                        imageVector = if(product.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if (product.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Favorite",
-                        tint = if(product.isFavorite) Color.Red else Color.White
+                        tint = if (product.isFavorite) Color.Red else Color.White
                     )
                 }
             }
@@ -224,47 +243,49 @@ fun DetailScreen(
                                     color = Color(0xFFE65100),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
-                                    modifier = Modifier.clickable { }
-                                )
+                                    modifier = Modifier.clickable { })
                                 Spacer(modifier = Modifier.height(24.dp))
                             }
 
-                            // Choose Size
-                            item {
-                                SectionTitle("Choose Size")
-                                SizeOption(
-                                    label = "Regular",
-                                    price = "Included",
-                                    selected = selectedSize == "Regular",
-                                    onClick = { selectedSize = "Regular" }
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                SizeOption(
-                                    label = "Large",
-                                    price = "+ $3.00",
-                                    selected = selectedSize == "Large",
-                                    onClick = { selectedSize = "Large" }
-                                )
-                                Spacer(modifier = Modifier.height(24.dp))
+                            // DYNAMIC SIZES
+                            if (state.product?.sizes?.isNotEmpty() == true) {
+                                item {
+                                    SectionTitle("Choose Size")
+                                    state.product.sizes.forEach { size ->
+                                        val isSelected = size == selectedSize
+                                        val priceText =
+                                            if (size.price == 0.0) "Included" else "+$${size.price}"
+
+                                        SizeOption(
+                                            label = size.name,
+                                            price = priceText,
+                                            selected = isSelected,
+                                            onClick = { selectedSize = size })
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
                             }
 
-                            // Add Extras
-                            item {
-                                SectionTitle("Add Extras")
-                                ExtraOption(
-                                    label = "Extra Cheese",
-                                    price = "+ $1.50",
-                                    checked = extraCheese,
-                                    onCheckedChange = { extraCheese = it }
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                ExtraOption(
-                                    label = "Avocado",
-                                    price = "+ $2.00",
-                                    checked = extraAvocado,
-                                    onCheckedChange = { extraAvocado = it }
-                                )
-                                Spacer(modifier = Modifier.height(24.dp))
+                            // DYNAMIC ADDONS
+                            if (state.product?.addons?.isNotEmpty() == true) {
+                                item {
+                                    SectionTitle("Add Extras")
+                                    state.product.addons.forEach { addon ->
+                                        val isChecked = selectedAddons.contains(addon)
+
+                                        ExtraOption(
+                                            label = addon.name,
+                                            price = "+$${addon.price}",
+                                            checked = isChecked,
+                                            onCheckedChange = {
+                                                selectedAddons =
+                                                    if (isChecked) selectedAddons - addon else selectedAddons + addon
+                                            })
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
                             }
 
                             // Special Instructions
@@ -274,9 +295,7 @@ fun DetailScreen(
                                     value = specialInstructions,
                                     onValueChange = { specialInstructions = it },
                                     placeholder = { Text("Add a note (e.g., no onions)", color = Color.Gray) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(100.dp),
+                                    modifier = Modifier.fillMaxWidth().height(100.dp),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         unfocusedContainerColor = Color(0xFFF9F9F9),
@@ -291,8 +310,7 @@ fun DetailScreen(
 
                         // 5. Sticky Footer (Qty + Add Button)
                         Surface(
-                            shadowElevation = 16.dp,
-                            color = Color.White
+                            shadowElevation = 16.dp, color = Color.White
                         ) {
                             Row(
                                 modifier = Modifier
@@ -311,7 +329,7 @@ fun DetailScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.padding(horizontal = 8.dp)
                                     ) {
-                                        IconButton(onClick = { if(quantity > 1) quantity-- }) {
+                                        IconButton(onClick = { if (quantity > 1) quantity-- }) {
                                             Icon(Icons.Default.Remove, null, tint = Color.Black)
                                         }
                                         Text(
@@ -328,18 +346,23 @@ fun DetailScreen(
 
                                 Spacer(modifier = Modifier.width(16.dp))
 
-                                // UPDATED BUTTON with Calculated Price
+
+
                                 Button(
-                                    onClick = onAddToCart,
+                                    onClick = {
+                                        // PASS DATA TO PARENT
+                                        onAddToCart(selectedSize, selectedAddons, quantity, specialInstructions)
+                                    },
                                     modifier = Modifier.weight(1f).height(50.dp),
                                     shape = RoundedCornerShape(50),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
                                 ) {
-                                    Text(
-                                        text = "Add to Cart - $${String.format("%.2f", finalTotalPrice)}",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    // Calculate visual price
+                                    val basePrice = state.product?.price ?: 0.0
+                                    val extraPrice = selectedSize.price + selectedAddons.sumOf { it.price }
+                                    val total = (basePrice + extraPrice) * quantity
+
+                                    Text("Add to Cart - $${String.format("%.2f", total)}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -365,14 +388,13 @@ fun SectionTitle(title: String) {
 @Composable
 fun SizeOption(label: String, price: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, if (selected) Color(0xFFE65100) else Color.LightGray.copy(alpha = 0.5f)),
-        color = if (selected) Color(0xFFFFF3E0) else Color.White, // Light Orange vs White
+        shape = RoundedCornerShape(12.dp), border = BorderStroke(
+            1.dp, if (selected) Color(0xFFE65100) else Color.LightGray.copy(alpha = 0.5f)
+        ), color = if (selected) Color(0xFFFFF3E0) else Color.White, // Light Orange vs White
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clickable { onClick() }
-    ) {
+            .clickable { onClick() }) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -388,26 +410,37 @@ fun SizeOption(label: String, price: String, selected: Boolean, onClick: () -> U
 //                    modifier = Modifier.size(20.dp) // Ideally use RadioButton composable
 //                )
                 // Better: Use actual Radio Button visual
-                RadioButton(selected = selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE65100)))
+                RadioButton(
+                    selected = selected,
+                    onClick = null,
+                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE65100))
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(label, fontWeight = FontWeight.Medium)
             }
-            Text(price, color = if(selected) Color(0xFFE65100) else Color.Gray, fontWeight = FontWeight.Bold)
+            Text(
+                price,
+                color = if (selected) Color(0xFFE65100) else Color.Gray,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
 
 @Composable
-fun ExtraOption(label: String, price: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+fun ExtraOption(
+    label: String, price: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit
+) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, if (checked) Color(0xFFE65100) else Color.LightGray.copy(alpha = 0.5f)),
+        border = BorderStroke(
+            1.dp, if (checked) Color(0xFFE65100) else Color.LightGray.copy(alpha = 0.5f)
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clickable { onCheckedChange(!checked) }
-    ) {
+            .clickable { onCheckedChange(!checked) }) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -420,11 +453,16 @@ fun ExtraOption(label: String, price: String, checked: Boolean, onCheckedChange:
                 // Custom circle for clean look
                 Surface(
                     shape = CircleShape,
-                    border = BorderStroke(1.dp, if(checked) Color(0xFFE65100) else Color.Gray),
-                    color = if(checked) Color(0xFFE65100) else Color.Transparent,
+                    border = BorderStroke(1.dp, if (checked) Color(0xFFE65100) else Color.Gray),
+                    color = if (checked) Color(0xFFE65100) else Color.Transparent,
                     modifier = Modifier.size(20.dp)
                 ) {
-                    if(checked) Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.padding(2.dp))
+                    if (checked) Icon(
+                        Icons.Default.Add,
+                        null,
+                        tint = Color.White,
+                        modifier = Modifier.padding(2.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))

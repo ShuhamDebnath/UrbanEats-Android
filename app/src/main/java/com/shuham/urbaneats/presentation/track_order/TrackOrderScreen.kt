@@ -2,12 +2,15 @@ package com.shuham.urbaneats.presentation.track_order
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -21,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
+
 
 
 @Composable
@@ -42,7 +46,6 @@ fun TrackOrderScreen(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             CenterAlignedTopAppBar(
-                // Display ID in Title
                 title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Track Order", fontWeight = FontWeight.Bold)
@@ -53,9 +56,7 @@ fun TrackOrderScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFFF5F5F5)
-                ),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFF5F5F5)),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -68,9 +69,9 @@ fun TrackOrderScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState()) // Allow scrolling if details are long
                 .padding(24.dp)
         ) {
-            // ... (Rest of the UI: Estimated Card, Timeline, Driver Card remains the same) ...
             // 1. Estimated Time Card
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -92,47 +93,77 @@ fun TrackOrderScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // NEW: Order Details Card (Address & Items)
+            if (state.orderDetails != null) {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        // Address Section
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.LocationOn, null, tint = Color(0xFFE65100), modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text("Delivery Address", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text(
+                                    text = state.orderDetails.address,
+                                    color = Color.Gray,
+                                    fontSize = 12.sp,
+                                    maxLines = 2
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.LightGray.copy(0.3f))
+
+                        // Items Summary
+                        state.orderDetails.items.forEach { item ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("${item.quantity}x ${item.name}", fontSize = 14.sp, color = Color.DarkGray)
+                                Text("$${String.format("%.2f", item.price * item.quantity)}", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Total
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Total", fontWeight = FontWeight.Bold)
+                            Text("$${String.format("%.2f", state.orderDetails.total)}", fontWeight = FontWeight.Bold, color = Color(0xFFE65100))
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
             // 2. Timeline
             Text("Order Status", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(16.dp))
 
-            TimelineStep(
-                title = "Order Placed",
-                subtitle = "We have received your order",
-                isActive = state.currentStep >= 1,
-                isCompleted = state.currentStep > 1,
-                isLast = false
-            )
-            TimelineStep(
-                title = "Preparing",
-                subtitle = "Your food is being cooked",
-                isActive = state.currentStep >= 2,
-                isCompleted = state.currentStep > 2,
-                isLast = false
-            )
-            TimelineStep(
-                title = "Out for Delivery",
-                subtitle = "Rider picked up your order",
-                isActive = state.currentStep >= 3,
-                isCompleted = state.currentStep > 3,
-                isLast = false
-            )
-            TimelineStep(
-                title = "Delivered",
-                subtitle = "Enjoy your meal!",
-                isActive = state.currentStep >= 4,
-                isCompleted = state.currentStep > 4,
-                isLast = true
-            )
+            TimelineStep("Order Placed", "We have received your order", state.currentStep >= 1, state.currentStep > 1, false)
+            TimelineStep("Preparing", "Your food is being cooked", state.currentStep >= 2, state.currentStep > 2, false)
+            TimelineStep("Out for Delivery", "Rider picked up your order", state.currentStep >= 3, state.currentStep > 3, false)
+            TimelineStep("Delivered", "Enjoy your meal!", state.currentStep >= 4, state.currentStep > 4, true)
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // 3. Driver Card
             if (state.currentStep >= 3) {
                 DriverCard()
             }
+
+            // Extra padding for scroll
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }

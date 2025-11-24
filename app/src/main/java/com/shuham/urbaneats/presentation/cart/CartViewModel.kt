@@ -2,7 +2,10 @@ package com.shuham.urbaneats.presentation.cart
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shuham.urbaneats.domain.model.Product
+import com.shuham.urbaneats.domain.usecase.cart.AddToCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.CartSummary
+import com.shuham.urbaneats.domain.usecase.cart.ClearCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.GetCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.RemoveFromCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.UpdateCartQuantityUseCase
@@ -19,7 +22,9 @@ data class CartState(
 class CartViewModel(
     private val getCartUseCase: GetCartUseCase,
     private val updateCartQuantityUseCase: UpdateCartQuantityUseCase,
-    private val removeFromCartUseCase: RemoveFromCartUseCase
+    private val removeFromCartUseCase: RemoveFromCartUseCase,
+    private val clearCartUseCase: ClearCartUseCase, // <--- NEW
+    private val addToCartUseCase: AddToCartUseCase  // <--- NEW (For Upsells)
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CartState())
@@ -51,6 +56,22 @@ class CartViewModel(
                 // If quantity is 1, pressing minus should remove it (or ask confirmation)
                 removeFromCartUseCase(productId)
             }
+        }
+    }
+
+
+    // NEW: Clear All
+    fun clearAllCart() {
+        viewModelScope.launch {
+            clearCartUseCase()
+        }
+    }
+
+    // NEW: Add Upsell Item (Quick Add)
+    fun addUpsellItem(product: Product) {
+        viewModelScope.launch {
+            // Add with default quantity 1 and no specific options
+            addToCartUseCase(product, 1, "Standard", "")
         }
     }
 }

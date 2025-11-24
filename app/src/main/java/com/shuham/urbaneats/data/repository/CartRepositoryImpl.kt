@@ -29,21 +29,31 @@ class CartRepositoryImpl(
         return dao.getCartItems()
     }
 
-    override suspend fun addToCart(product: Product) {
+    override suspend fun addToCart(product: Product, quantity: Int, options: String, instructions: String) {
         val existingItem = dao.getCartItemById(product.id)
+
         if (existingItem != null) {
-            // Item exists, just increase quantity
-            val updatedItem = existingItem.copy(quantity = existingItem.quantity + 1)
-            dao.insertCartItem(updatedItem)
+            // Update existing item (adding new quantity to old)
+            // Note: In a real app, if options differ, you'd add a separate row.
+            // For simplicity here, we just update the quantity and overwrite notes.
+            dao.insertCartItem(
+                existingItem.copy(
+                    quantity = existingItem.quantity + quantity,
+                    selectedOptions = options,
+                    instructions = instructions
+                )
+            )
         } else {
-            // New item
+            // Insert New
             dao.insertCartItem(
                 CartItemEntity(
                     productId = product.id,
                     name = product.name,
-                    price = product.price,
+                    price = product.price, // Ideally store the calculated total unit price here
                     imageUrl = product.imageUrl,
-                    quantity = 1
+                    quantity = quantity,
+                    selectedOptions = options,
+                    instructions = instructions
                 )
             )
         }
@@ -98,5 +108,9 @@ class CartRepositoryImpl(
         } catch (e: Exception) {
             NetworkResult.Error("Network Error: ${e.localizedMessage}")
         }
+    }
+
+    override suspend fun clearCart() {
+        dao.clearCart()
     }
 }

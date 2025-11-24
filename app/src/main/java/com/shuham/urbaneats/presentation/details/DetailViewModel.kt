@@ -2,7 +2,9 @@ package com.shuham.urbaneats.presentation.details
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shuham.urbaneats.domain.model.AddonOption
 import com.shuham.urbaneats.domain.model.Product
+import com.shuham.urbaneats.domain.model.SizeOption
 import com.shuham.urbaneats.domain.usecase.cart.AddToCartUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetProductDetailsUseCase
 import com.shuham.urbaneats.domain.usecase.product.ToggleFavoriteUseCase
@@ -34,12 +36,29 @@ class DetailViewModel(
         }
     }
 
-    fun addToCart() {
+    fun addToCart(
+        size: SizeOption,
+        addons: Set<AddonOption>,
+        quantity: Int,
+        instructions: String
+    ) {
         viewModelScope.launch {
             val currentProduct = _state.value.product
             if (currentProduct != null) {
-                addToCartUseCase(currentProduct)
-                // Optional: Send a "Toast" effect here saying "Added to Cart"
+                // Create a nice string summary of options
+                val addonString = addons.joinToString(", ") { it.name }
+                val optionsSummary = if (addonString.isNotEmpty()) "${size.name}, $addonString" else size.name
+
+                // Calculate adjusted price (Base + Size + Addons)
+                val unitPrice = currentProduct.price + size.price + addons.sumOf { it.price }
+
+                // Save to DB
+                addToCartUseCase(
+                    product = currentProduct.copy(price = unitPrice), // Store the adjusted price!
+                    quantity = quantity,
+                    options = optionsSummary,
+                    instructions = instructions
+                )
             }
         }
     }

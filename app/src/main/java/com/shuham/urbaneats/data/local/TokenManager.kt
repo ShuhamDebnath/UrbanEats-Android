@@ -25,6 +25,7 @@ class TokenManager(private val context: Context) {
         private val KEY_USER_ID = stringPreferencesKey("user_id")
         private val KEY_USER_NAME = stringPreferencesKey("user_name")
         private val KEY_USER_EMAIL = stringPreferencesKey("user_email")
+        private val KEY_SELECTED_ADDRESS_ID = stringPreferencesKey("selected_address_id")
     }
 
     // 1. Save User Session
@@ -57,6 +58,17 @@ class TokenManager(private val context: Context) {
     // 4. Logout (Clear Data)
     suspend fun clearSession() {
         context.dataStore.edit { it.clear() }
+    }
+
+    // NEW: Selected Address Management
+    suspend fun saveSelectedAddress(addressId: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SELECTED_ADDRESS_ID] = addressId
+        }
+    }
+
+    fun getSelectedAddressId(): Flow<String?> {
+        return context.dataStore.data.map { prefs -> prefs[KEY_SELECTED_ADDRESS_ID] }
     }
 }
 

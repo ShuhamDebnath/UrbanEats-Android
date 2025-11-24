@@ -16,14 +16,17 @@ const userSchema = new mongoose.Schema({
         required: true,
         min: 6
     },
-    address: {
-        type: String,
-        default: ""
-    },
     date: {
         type: Date,
         default: Date.now
-    }
+    },
+    // FIX: Changed from single String to Array of Objects
+    addresses: [
+        {
+            label: { type: String, required: true }, // e.g., "Home", "Work"
+            fullAddress: { type: String, required: true } // e.g., "123 Main St"
+        }
+    ]
 });
 
 module.exports = mongoose.model('User', userSchema);

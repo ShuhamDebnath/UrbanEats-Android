@@ -40,6 +40,16 @@ object FavoritesRoute
 object NoInternetRoute
 
 @Serializable
+object AddressListRoute
+
+@Serializable
+object HelpSupportRoute
+
+@Serializable
+object SettingsRoute
+
+
+@Serializable
 data class OrderFailureRoute(val reason: String)
 @Serializable
 data class OrderSuccessRoute(val orderId: String)

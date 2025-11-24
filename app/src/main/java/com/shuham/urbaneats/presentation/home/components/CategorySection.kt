@@ -18,8 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.shuham.urbaneats.domain.model.Category
 
-data class Category(val id: String, val name: String)
 
 @Composable
 fun CategorySection(

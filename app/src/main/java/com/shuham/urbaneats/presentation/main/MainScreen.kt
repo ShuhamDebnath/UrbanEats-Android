@@ -31,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.shuham.urbaneats.presentation.address.AddressListRoute
 import com.shuham.urbaneats.presentation.cart.CartRoute
 import com.shuham.urbaneats.presentation.checkout.CheckoutRoute
 import com.shuham.urbaneats.presentation.checkout.OrderFailureRoute
@@ -38,20 +39,26 @@ import com.shuham.urbaneats.presentation.checkout.OrderSuccessRoute
 import com.shuham.urbaneats.presentation.details.DetailRoute
 import com.shuham.urbaneats.presentation.favorites.FavoritesRoute
 import com.shuham.urbaneats.presentation.home.HomeRoute
+import com.shuham.urbaneats.presentation.navigation.AddressListRoute
 import com.shuham.urbaneats.presentation.navigation.CartRoute
 import com.shuham.urbaneats.presentation.navigation.CheckoutRoute
 import com.shuham.urbaneats.presentation.navigation.DetailsRoute
 import com.shuham.urbaneats.presentation.navigation.FavoritesRoute
+import com.shuham.urbaneats.presentation.navigation.HelpSupportRoute
 import com.shuham.urbaneats.presentation.navigation.HomeRoute
+import com.shuham.urbaneats.presentation.navigation.NoInternetRoute
 import com.shuham.urbaneats.presentation.navigation.OrderFailureRoute
 import com.shuham.urbaneats.presentation.navigation.OrderSuccessRoute
 import com.shuham.urbaneats.presentation.navigation.OrdersRoute
 import com.shuham.urbaneats.presentation.navigation.ProfileRoute
 import com.shuham.urbaneats.presentation.navigation.SearchRoute
+import com.shuham.urbaneats.presentation.navigation.SettingsRoute
 import com.shuham.urbaneats.presentation.navigation.TrackOrderRoute
 import com.shuham.urbaneats.presentation.orders.OrdersRoute
+import com.shuham.urbaneats.presentation.profile.HelpSupportRoute
 import com.shuham.urbaneats.presentation.profile.ProfileRoute
 import com.shuham.urbaneats.presentation.search.SearchRoute
+import com.shuham.urbaneats.presentation.settings.SettingsRoute
 import com.shuham.urbaneats.presentation.track_order.TrackOrderRoute
 
 // Define the Tab Structure
@@ -161,7 +168,6 @@ fun MainScreen(
                         )
                     },
                     onCartClick = { navController.navigate(CartRoute) },
-                    onProfileClick = { navController.navigate(ProfileRoute) },
                     onSearchClick = {
                         navController.navigate(SearchRoute) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -170,7 +176,8 @@ fun MainScreen(
                             launchSingleTop = true
                             restoreState = true
                         }
-                    }
+                    },
+                    onAddressClick = { navController.navigate(AddressListRoute) }
                 )
             }
 
@@ -195,7 +202,10 @@ fun MainScreen(
                 ProfileRoute(
                     onLogoutSuccess = onLogout,
                     onOrdersClick = { navController.navigate(OrdersRoute) },
-                    onFavoritesClick = { navController.navigate(FavoritesRoute) }
+                    onFavoritesClick = { navController.navigate(FavoritesRoute) },
+                    onAddressClick = { navController.navigate(AddressListRoute) },
+                    onHelpClick = { navController.navigate(HelpSupportRoute) },
+                    onSettingsClick = { navController.navigate(SettingsRoute) }
                 )
             }
 
@@ -220,29 +230,72 @@ fun MainScreen(
                 )
             }
 
+            // ADDRESS
+            composable<AddressListRoute> {
+                AddressListRoute(
+                    onBackClick = { navController.popBackStack() },
+                    onAddressSelected = { address ->
+                        // Pass result back to Checkout
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("selected_address", address.fullAddress)
+
+                        navController.popBackStack()
+                    }
+                )
+            }
+            // Help and Support
+            composable<HelpSupportRoute> {
+                HelpSupportRoute(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
+            // SETTINGS SCREEN
+            composable<SettingsRoute> {
+                SettingsRoute(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
             // DETAILS
             composable<DetailsRoute> { backStackEntry ->
                 val args = backStackEntry.toRoute<DetailsRoute>()
                 DetailRoute(
                     foodId = args.foodId,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    // NAVIGATE TO CART
+                    onGoToCart = {
+                        navController.navigate(CartRoute) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
 
             // CHECKOUT
             composable<CheckoutRoute> {
                 CheckoutRoute(
-                    onOrderSuccess = {
-                        navController.navigate(OrderSuccessRoute(it)) {
+                    onOrderSuccess = { orderId ->
+                        navController.navigate(OrderSuccessRoute(orderId)) {
                             popUpTo(CheckoutRoute) { inclusive = true }
                         }
-                    },onOrderFailure = { reason ->
-                        // Navigate to Failure Screen
+                    },
+                    onOrderFailure = { reason ->
                         navController.navigate(OrderFailureRoute(reason))
                     },
+                    onNoInternet = {
+                        // TRIGGER THE GLOBAL NO INTERNET SCREEN
+                        navController.navigate(NoInternetRoute)
+                    },
+                    onEditAddress = { navController.navigate(AddressListRoute) },
+                    onBackClick = { navController.popBackStack() },
 
-                    onBackClick = { navController.popBackStack() }
-                )
+                    )
             }
 
             composable<OrderSuccessRoute> { backStackEntry ->

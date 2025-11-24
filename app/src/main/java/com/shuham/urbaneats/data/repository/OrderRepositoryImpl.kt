@@ -35,4 +35,19 @@ class OrderRepositoryImpl(
             NetworkResult.Error("Network error: ${e.localizedMessage}")
         }
     }
+
+    // Get Single Order (By reusing getMyOrders logic for simplicity, or creating new endpoint)
+    override suspend fun getOrderById(orderId: String): NetworkResult<Order> {
+        // Efficient strategy: If we had a local DB cache for orders, we'd read that.
+        // For now, let's fetch all and filter, or assume a new endpoint exists.
+        // Let's just filter from 'getMyOrders' to avoid backend changes today.
+        val allOrdersResult = getMyOrders()
+        return if (allOrdersResult is NetworkResult.Success) {
+            val match = allOrdersResult.data?.find { it.id == orderId }
+            if (match != null) NetworkResult.Success(match)
+            else NetworkResult.Error("Order not found")
+        } else {
+            NetworkResult.Error(allOrdersResult.message)
+        }
+    }
 }

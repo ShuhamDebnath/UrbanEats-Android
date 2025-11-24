@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface CartDao {
 
     // Read all items (Reactive)
-    @Query("SELECT * FROM cart_items")
+    @Query("SELECT * FROM cart_items ORDER BY name ASC")
     fun getCartItems(): Flow<List<CartItemEntity>>
 
     // Get specific item (to check if it exists)

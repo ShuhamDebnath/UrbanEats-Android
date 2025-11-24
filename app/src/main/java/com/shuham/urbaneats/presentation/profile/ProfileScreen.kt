@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Favorite
@@ -58,6 +59,9 @@ fun ProfileRoute(
     onLogoutSuccess: () -> Unit,
     onOrdersClick: () -> Unit,
     onFavoritesClick: () -> Unit,
+    onAddressClick: () -> Unit,
+    onHelpClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val user by viewModel.userSession.collectAsStateWithLifecycle()
@@ -74,6 +78,9 @@ fun ProfileRoute(
         onOptionClick = { option ->
             if (option == "orders") onOrdersClick()
             if (option == "favorites") onFavoritesClick()
+            if (option == "addresses") onAddressClick()
+            if (option == "help") onHelpClick()
+            if (option == "settings") onSettingsClick()
             // Add other navigation cases here
         }
     )
@@ -200,7 +207,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             ProfileMenuCard(
-                icon = Icons.Default.Help,
+                icon = Icons.AutoMirrored.Filled.Help,
                 iconBgColor = Color(0xFFFFE0B2),
                 iconTint = Color(0xFFE65100),
                 title = "Help & Support",
