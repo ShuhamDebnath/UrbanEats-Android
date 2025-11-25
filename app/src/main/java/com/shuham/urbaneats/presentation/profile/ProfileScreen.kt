@@ -45,10 +45,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.shuham.urbaneats.data.local.UserSession
 import org.koin.androidx.compose.koinViewModel
 
@@ -112,24 +114,44 @@ fun ProfileScreen(
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFA3C4BC)), // Muted Green/Teal background from image
+                    .background(Color(0xFFA3C4BC)), // Muted Green fallback
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(60.dp),
-                    tint = Color.White
-                )
+                if (!user?.profileImage.isNullOrBlank()) {
+                    // Load Real Image from Cloudinary URL
+                    AsyncImage(
+                        model = user.profileImage,
+                        contentDescription = "Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    // Show Default Icon if no image
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(60.dp),
+                        tint = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = user?.name ?: "Alex Thompson",
+                text = user?.name ?: "Guest User",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
+
+            // Optional: Show Email for clarity
+            if (!user?.email.isNullOrBlank()) {
+                Text(
+                    text = user.email,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 

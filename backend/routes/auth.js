@@ -32,7 +32,8 @@ router.post('/register', async (req, res) => {
             user: {
                 id: savedUser._id,
                 name: savedUser.name,
-                email: savedUser.email
+                email: savedUser.email,
+                profileImage: user.profileImage
             }
         });
 
@@ -61,7 +62,8 @@ router.post('/login', async (req, res) => {
             user: {
                 id: user._id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                profileImage: user.profileImage
             }
         });
 

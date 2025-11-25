@@ -9,13 +9,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.shuham.urbaneats.core.NetworkUtils
 import com.shuham.urbaneats.core.NotificationHelper
+import com.shuham.urbaneats.data.local.TokenManager
 import com.shuham.urbaneats.presentation.common.NoInternetScreen
 import com.shuham.urbaneats.presentation.login.LoginRoute
 import com.shuham.urbaneats.presentation.main.MainScreen
@@ -39,8 +42,26 @@ class MainActivity : ComponentActivity() {
         val notificationHelper = NotificationHelper(this)
         notificationHelper.createNotificationChannel()
 
+        // Direct access to TokenManager to read theme before UI loads
+        val tokenManager = TokenManager(applicationContext)
+
         setContent {
-            UrbanEatsTheme {
+
+            // 1. Observe Theme Preference (Reactive)
+            // Defaults to "system" if nothing is saved
+            val themePreference = tokenManager.getTheme().collectAsState(initial = "system").value
+
+            // 2. Calculate Logic
+            val useDarkTheme = when (themePreference) {
+                "light" -> false
+                "dark" -> true
+                else -> isSystemInDarkTheme() // Uses Android OS setting
+            }
+
+            UrbanEatsTheme(
+                darkTheme = useDarkTheme,
+                dynamicColor = false // Force our Brand Colors
+            ) {
 
                 // ASK FOR PERMISSION (Android 13+)
                 GrantNotificationPermission()

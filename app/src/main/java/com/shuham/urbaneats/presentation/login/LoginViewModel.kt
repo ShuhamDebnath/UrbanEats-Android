@@ -75,7 +75,8 @@ class LoginViewModel(
                                 token = authResponse.token,
                                 id = authResponse.user.id,
                                 name = authResponse.user.name,
-                                email = authResponse.user.email
+                                email = authResponse.user.email,
+                                image = authResponse.user.profileImage
                             )
                         }
                         _state.update { it.copy(isLoading = false) }

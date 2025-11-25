@@ -15,4 +15,6 @@ interface UserRepository {
     // NEW: Helper to find an address by ID (from cache or fetch)
     suspend fun getAddressById(id: String): Address?
     suspend fun deleteAddress(addressId: String): NetworkResult<List<Address>>
+    suspend fun updateProfile(name: String, base64Image: String?): NetworkResult<Boolean>
+    suspend fun changePassword(oldPass: String, newPass: String): NetworkResult<Boolean>
 }

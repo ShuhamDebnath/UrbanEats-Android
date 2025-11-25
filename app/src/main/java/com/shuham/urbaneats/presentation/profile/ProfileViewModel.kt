@@ -11,32 +11,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 
-/*
-class ProfileViewModel(
-    private val tokenManager: TokenManager
-) : ViewModel() {
-
-    private val _user = MutableStateFlow<UserSession?>(null)
-    val user = _user.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            tokenManager.getUserSession().collect { session ->
-                _user.value = session
-            }
-        }
-    }
-
-    fun logout() {
-        viewModelScope.launch {
-            tokenManager.clearSession()
-            // Logic to navigate back to Login handled in UI
-        }
-    }
-}
- */
-
-
 class ProfileViewModel(private val tokenManager: TokenManager) : ViewModel() {
 
     val userSession = tokenManager.getUserSession()
