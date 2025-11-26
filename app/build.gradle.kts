@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,11 +10,20 @@ plugins {
     //id("com.google.devtools.ksp")
 }
 
+
+// --- FIX 1: LOAD KEYSTORE AT TOP LEVEL ---
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.shuham.urbaneats"
     compileSdk {
         version = release(36)
     }
+
 
     defaultConfig {
         applicationId = "com.shuham.urbaneats"
@@ -23,9 +35,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
+
+    // 2. Define Signing Config
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
+    }
+
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // 3. Enable Optimization (R8)
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            // 4. Apply Signing Config
+            signingConfig = signingConfigs.getByName("release")
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

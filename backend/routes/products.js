@@ -12,17 +12,38 @@ router.get('/', async (req, res) => {
     }
 });
 
-// SEARCH
+
+// 1. SEARCH PRODUCTS
 router.get('/search', async (req, res) => {
     try {
         const query = req.query.q;
-        if (!query) return res.json([]);
-        const products = await Product.find({ name: { $regex: query, $options: 'i' } }).populate('category');
+        if (!query) return res.json([]); // Return empty array if no query
+
+        // FIX: Removed .populate('category'). Just send the raw ID.
+        // Also added .lean() for performance and cleaner JSON.
+        const products = await Product.find({
+            name: { $regex: query, $options: 'i' }
+        }).lean();
+
         res.json(products);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error("Search Error:", err); // Log to Render dashboard
+        res.status(500).json({ message: "Server Error during search" });
     }
 });
+
+
+// SEARCH
+//router.get('/search', async (req, res) => {
+//    try {
+//        const query = req.query.q;
+//        if (!query) return res.json([]);
+//        const products = await Product.find({ name: { $regex: query, $options: 'i' } }).populate('category');
+//        res.json(products);
+//    } catch (err) {
+//        res.status(500).json({ message: err.message });
+//    }
+//});
 
 // SEED DATA (Categories + Products)
 router.post('/seed', async (req, res) => {

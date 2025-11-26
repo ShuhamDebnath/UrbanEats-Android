@@ -1,21 +1,30 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# --- KTOR SPECIFIC RULES ---
+# Ktor uses Java Management classes for debugging on JVM.
+# These don't exist on Android, so we tell R8 to ignore the warnings.
+-dontwarn java.lang.management.**
+-dontwarn java.lang.instrument.**
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep Ktor internal classes to prevent runtime crashes due to reflection
+-keep class io.ktor.** { *; }
+-keepattributes Signature, InnerClasses, EnclosingMethod
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- KOTLIN SERIALIZATION ---
+-keepattributes *Annotation*, InnerClasses
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class * {
+    @kotlinx.serialization.Serializable <init>(...);
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- DATA MODELS ---
+# Keep your data classes so they aren't renamed (crucial for JSON parsing)
+-keep class com.shuham.urbaneats.data.remote.dto.** { *; }
+-keep class com.shuham.urbaneats.domain.model.** { *; }
+
+# --- ROOM DATABASE ---
+-keep class androidx.room.paging.** { *; }
+-dontwarn androidx.room.paging.**
+
+# --- COROUTINES ---
+-dontwarn kotlinx.coroutines.**
