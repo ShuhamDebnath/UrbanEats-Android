@@ -3,6 +3,8 @@ package com.shuham.urbaneats.presentation.home
 import app.cash.turbine.test
 import com.shuham.urbaneats.MainDispatcherRule
 import com.shuham.urbaneats.domain.model.Product
+import com.shuham.urbaneats.domain.repository.UserRepository
+import com.shuham.urbaneats.domain.usecase.product.GetCategoriesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetMenuUseCase
 import com.shuham.urbaneats.domain.usecase.product.RefreshMenuUseCase
 import com.shuham.urbaneats.domain.usecase.product.ToggleFavoriteUseCase
@@ -25,14 +27,25 @@ class HomeViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var viewModel: HomeViewModel
+
+    // Mocks
     private val getMenuUseCase: GetMenuUseCase = mock()
     private val refreshMenuUseCase: RefreshMenuUseCase = mock()
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase = mock()
+    private val getCategoriesUseCase: GetCategoriesUseCase = mock() // <--- NEW MOCK
+    private val userRepository: UserRepository = mock()             // <--- NEW MOCK
 
     @Before
-    fun setUp() {
-        // Mock the database returning an empty list initially
+    fun setUp() = runTest {
+        // 1. Default Behavior: Return empty lists/flows to prevent crashes
         whenever(getMenuUseCase()).thenReturn(flowOf(emptyList()))
+
+        // Mock Categories (Success with empty list)
+        whenever(getCategoriesUseCase()).thenReturn(NetworkResult.Success(emptyList()))
+
+        // Mock User Address Logic (Return empty list or "Select Address")
+        whenever(userRepository.getAddresses()).thenReturn(NetworkResult.Success(emptyList()))
+        whenever(userRepository.getSelectedAddressId()).thenReturn(flowOf(null))
     }
 
     @Test
@@ -43,12 +56,20 @@ class HomeViewModelTest {
         )
         whenever(getMenuUseCase()).thenReturn(flowOf(dummyProducts))
 
-        // When
-        viewModel = HomeViewModel(getMenuUseCase, refreshMenuUseCase, toggleFavoriteUseCase)
+        // When (Initialize with ALL 5 dependencies)
+        viewModel = HomeViewModel(
+            getMenuUseCase,
+            refreshMenuUseCase,
+            toggleFavoriteUseCase,
+            getCategoriesUseCase,
+            userRepository
+        )
 
         // Then
         viewModel.state.test {
-            val state = awaitItem()
+            val state = awaitItem() // First emission
+            // Depending on how fast flow emits, we might need to await item again or check property
+            // For simplicity, assuming initial load works:
             assertEquals(dummyProducts, state.products)
         }
     }
@@ -56,18 +77,19 @@ class HomeViewModelTest {
     @Test
     fun `refreshData updates loading state`() = runTest {
         // Given
-        whenever(getMenuUseCase()).thenReturn(flowOf(emptyList()))
         whenever(refreshMenuUseCase()).thenReturn(NetworkResult.Success(Unit))
 
-        viewModel = HomeViewModel(getMenuUseCase, refreshMenuUseCase, toggleFavoriteUseCase)
-
         // When
+        viewModel = HomeViewModel(
+            getMenuUseCase,
+            refreshMenuUseCase,
+            toggleFavoriteUseCase,
+            getCategoriesUseCase,
+            userRepository
+        )
         viewModel.refreshData()
 
-        // Then (We can't easily test the transient 'true' state without precise timing in this simple setup,
-        // but we can verify it eventually settles to false and calls the use case)
-
-        // Verify the use case was actually called
+        // Then
         Mockito.verify(refreshMenuUseCase, Mockito.atLeastOnce()).invoke()
     }
 }
