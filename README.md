@@ -1,47 +1,137 @@
-# UrbanEats - Scalable Q-Commerce Android Application 🍔
+UrbanEats - Premium Food Delivery App 🍔
 
-![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
-![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=android&logoColor=white)
-![Clean Architecture](https://img.shields.io/badge/Clean%20Architecture-orange?style=for-the-badge)
+UrbanEats is a fully functional, offline-first E-Commerce application built with modern Android standards. It features a Node.js backend, MongoDB database, and a reactive Jetpack Compose UI.
 
-## 📱 Project Overview
-UrbanEats is a fully functional food delivery application built to demonstrate **industry-standard Android development practices**. Unlike typical tutorial apps, this project focuses on scalability, offline-first data persistence, and complex state management.
+📱 Screenshots
 
-**Role:** Full Stack (Android + Node.js Backend)
-**Development Time:** 30 Days (Intensive)
+Home Feed
 
-## 🛠 Tech Stack & Architecture
-This project adheres to **Modern Android Development (MAD)** guidelines.
+Search & Explore
 
-* **Architecture:** MVVM (Model-View-ViewModel) with Clean Architecture (Presentation, Domain, Data layers).
-* **UI:** 100% Jetpack Compose (Material 3).
-* **Dependency Injection:** Hilt.
-* **Async Processing:** Coroutines & Kotlin Flow.
-* **Networking:** Retrofit 2 + OkHttp3.
-* **Local Database:** Room (Offline caching & Single Source of Truth).
-* **Image Loading:** Coil.
-* **Navigation:** Jetpack Navigation Compose (Type-safe navigation).
-* **Backend:** Node.js, Express, MongoDB (Custom built API).
+Cart & Bill
 
-## 🚀 Key Features
-* **Authentication:** JWT based secure login/signup.
-* **Complex UI Composition:** Nested `LazyColumn` and `LazyRow` with performance optimizations.
-* **Offline-First:** Users can view menus and their cart history without internet (Room Database).
-* **Optimistic Updates:** UI updates instantly before server confirmation for a snappy UX.
-* **Search:** Debounced search functionality utilizing `Flow` operators.
-* **Background Tasks:** WorkManager for syncing orders in the background.
+Order Tracking
 
-## 📸 Screenshots
-*(Leave this blank for now, we will add these on Day 25)*
-| Home Feed | Product Detail | Cart & Checkout | Dark Mode |
-|:---:|:---:|:---:|:---:|
-| ![Home](url) | ![Detail](url) | ![Cart](url) | ![Dark](url) |
+<img src="screenshots/home.png" width="200"/>
 
-## 🏗 Setup & Installation
-1. Clone the repo: `git clone https://github.com/ShuhamDebnath/UrbanEats-Android.git`
-2. Add your `local.properties` file with API keys.
-3. Build and Run.
+<img src="screenshots/search.png" width="200"/>
 
-## 🤝 Contact
-**Suham Debnath**
-[LinkedIn Link] | [Email Link]
+<img src="screenshots/cart.png" width="200"/>
+
+<img src="screenshots/track.png" width="200"/>
+
+Profile & Settings
+
+Login & Auth
+
+Success Screen
+
+No Internet
+
+<img src="screenshots/profile.png" width="200"/>
+
+<img src="screenshots/login.png" width="200"/>
+
+<img src="screenshots/success.png" width="200"/>
+
+<img src="screenshots/no_internet.png" width="200"/>
+
+(Note: Upload your screenshots to a screenshots folder in your repo to make these visible)
+
+🛠 Tech Stack
+
+Architecture: Clean Architecture (Presentation, Domain, Data) with MVVM pattern.
+
+UI: 100% Jetpack Compose (Material 3 Design System) with Custom Theming.
+
+Dependency Injection: Koin (Lightweight, Kotlin-first).
+
+Networking: Ktor Client (Multiplatform-ready).
+
+Local Database: Room (SQLite) for offline caching and Single Source of Truth.
+
+Async: Kotlin Coroutines & Flows.
+
+Background Work: WorkManager (Order Notifications).
+
+Image Loading: Coil.
+
+Backend: Node.js, Express, MongoDB (Mongoose), Cloudinary (Image Storage).
+
+CI/CD: GitHub Actions (Automated Unit Tests & Release Build).
+
+🚀 Key Features
+
+Offline-First Experience: Users can browse the menu and view their cart even without internet.
+
+Dynamic Product Options: Products support server-driven sizes and add-ons (e.g., "Extra Cheese").
+
+Real-time Search: Debounced search functionality that queries the backend efficiently.
+
+Persistent Cart: Cart state is saved in the local database and survives app restarts.
+
+Order Tracking: Simulated real-time tracking timeline with background notifications.
+
+Secure Authentication: JWT-based auth with auto-login and secure session management (DataStore).
+
+User Profile: Update name and profile picture (uploaded to Cloudinary).
+
+Theme Engine: Supports Light, Dark, and System Default modes with immediate UI updates.
+
+Address Management: Full CRUD for delivery addresses, synced with the server.
+
+Robust Error Handling: Dedicated screens for failures and connectivity issues.
+
+🏗 Architecture
+
+The app follows the Single Source of Truth (SSOT) principle. The UI observes the Database, and the Repository syncs the Database with the Network.
+
+graph TD
+UI[Compose UI] -->|Observes| VM[ViewModel]
+VM -->|Collects| UC[Use Cases]
+UC -->|Calls| Repo[Repository]
+Repo -->|Reads/Writes| DB[(Room Database)]
+Repo -->|Fetches| API[Ktor Client]
+
+
+🔧 Setup & Installation
+
+Prerequisites:
+
+Android Studio Koala/Ladybug or newer.
+
+Node.js (for local backend).
+
+MongoDB Atlas Account.
+
+1. Backend Setup:
+
+cd backend
+npm install
+# Create a .env file with DB_CONNECT, TOKEN_SECRET, and CLOUDINARY keys
+node server.js
+
+
+2. Android Setup:
+
+Clone the repository:
+
+git clone [https://github.com/ShuhamDebnath/UrbanEats-Android.git](https://github.com/ShuhamDebnath/UrbanEats-Android.git)
+
+
+Open the project in Android Studio.
+
+Wait for Gradle Sync to finish.
+
+Run on an Emulator or Physical Device.
+
+🧪 Testing
+
+The project includes Unit Tests for ViewModels and UseCases, and Instrumentation Tests for Room Database.
+
+./gradlew testDebugUnitTest
+
+
+📄 License
+
+This project is for educational purposes and portfolio demonstration.
