@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,14 +49,20 @@ fun CategoryChip(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    // Colors from your screenshot
-    val backgroundColor = if (isSelected) Color(0xFFE65100) else Color(0xFFF5F5F5) // Orange vs Light Gray
-    val contentColor = if (isSelected) Color.White else Color.Black
+    // 1. Dynamic Colors based on Selection and Theme
+    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+
+    // Optional: Add a border for unselected items in dark mode for better visibility
+    val borderModifier = if (!isSelected) {
+        Modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+    } else Modifier
 
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(backgroundColor)
+            .then(borderModifier) // Apply subtle bg hint if unselected
             .clickable { onClick() }
             .padding(horizontal = 24.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center

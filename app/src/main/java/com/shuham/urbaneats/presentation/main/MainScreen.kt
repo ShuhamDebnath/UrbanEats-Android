@@ -10,6 +10,7 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -19,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -97,8 +99,9 @@ fun MainScreen(
             if (showBottomBar) {
                 // Clean White Navigation Bar
                 NavigationBar(
-                    containerColor = Color.White,
-                    tonalElevation = 8.dp
+                    containerColor = Color.White, // Explicit White for clean look
+                    tonalElevation = 8.dp,
+                    modifier = Modifier.shadow(8.dp) // Add shadow for separation
                 ) {
                     topLevelRoutes.forEach { screen ->
                         val isSelected =
@@ -125,16 +128,17 @@ fun MainScreen(
                             label = {
                                 Text(
                                     text = screen.label,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
                             },
                             selected = isSelected,
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color(0xFFE65100), // Brand Orange
-                                selectedTextColor = Color(0xFFE65100),
-                                indicatorColor = Color(0xFFFFF3E0), // Light Peach Pill
-                                unselectedIconColor = Color.Gray,
-                                unselectedTextColor = Color.Gray
+                                selectedIconColor = MaterialTheme.colorScheme.primary, // Orange
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant, // Gray
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             onClick = {
                                 navController.navigate(screen.route) {
@@ -177,6 +181,7 @@ fun MainScreen(
                             restoreState = true
                         }
                     },
+                    //onProfileClick = { navController.navigate(ProfileRoute) }
                     onAddressClick = { navController.navigate(AddressListRoute) }
                 )
             }

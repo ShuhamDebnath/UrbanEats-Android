@@ -10,7 +10,6 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -19,7 +18,9 @@ import androidx.core.view.WindowCompat
 // 1. Define Light Color Scheme
 private val LightColorScheme = lightColorScheme(
     primary = UrbanOrange,
-    onPrimary = Color.White,
+    onPrimary = UrbanWhite,
+
+    // FIX: Explicitly map the container colors you defined
     primaryContainer = UrbanOrangeLight,
     onPrimaryContainer = UrbanDarkBrown,
 
@@ -28,32 +29,36 @@ private val LightColorScheme = lightColorScheme(
 
     surface = UrbanWhite,
     onSurface = UrbanDarkBrown,
+    onSurfaceVariant = UrbanGray,
 
     secondary = UrbanGray,
-    onSecondary = Color.White,
+    onSecondary = UrbanWhite,
 
+    outlineVariant = LightOutline,
     error = UrbanError
 )
 
-// 2. Define Dark Color Scheme
 private val DarkColorScheme = darkColorScheme(
-    primary = DarkOrange,
-    onPrimary = DarkBackground, // Black text on Orange button looks sharp
-    primaryContainer = UrbanOrange,
-    onPrimaryContainer = Color.White,
+    primary = UrbanOrangeDark,
+    onPrimary = DarkBackground, // Black text on bright orange button
+
+    // FIX: Dark Mode container mapping
+    primaryContainer = DarkOrangeContainer,
+    onPrimaryContainer = UrbanOrangeDark, // Text matches primary color
 
     background = DarkBackground,
     onBackground = DarkTextPrimary,
 
     surface = DarkSurface,
     onSurface = DarkTextPrimary,
+    onSurfaceVariant = DarkTextSecondary,
 
     secondary = DarkTextSecondary,
     onSecondary = DarkBackground,
 
+    outlineVariant = DarkOutline,
     error = UrbanError
 )
-
 @Composable
 fun UrbanEatsTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

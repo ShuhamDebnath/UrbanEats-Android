@@ -3,6 +3,7 @@ package com.shuham.urbaneats.presentation.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -31,10 +33,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shuham.urbaneats.domain.model.Product
 import com.shuham.urbaneats.presentation.components.FoodItemShimmer
@@ -57,6 +62,7 @@ fun HomeRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val currentAddress by viewModel.currentAddress.collectAsStateWithLifecycle()
 
+
     HomeScreen(
         state = state,
         onRefresh = viewModel::refreshData,
@@ -73,6 +79,10 @@ fun HomeRoute(
 // ==========================================
 // 2. THE UI (Stateless Screen)
 // ==========================================
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -88,14 +98,14 @@ fun HomeScreen(
 ) {
 
     Scaffold(
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             // --- FIXED HEADER SECTION (Address + Categories) ---
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .statusBarsPadding() // Handles the status bar space
+                    .fillMaxWidth().background(MaterialTheme.colorScheme.background)
+                    .shadow(4.dp, spotColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f))
+                    .statusBarsPadding() // Push down from status bar
             ) {
                 // 1. Address Row
                 Row(
@@ -103,28 +113,38 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Row(
-                        modifier = Modifier.clickable { onAddressClick() },
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.clickable { onAddressClick() }
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = null,
-                            tint = Color.Black
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = currentAddress,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            text = "Deliver to",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+
                         )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = currentAddress,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
 
                     Surface(
                         shape = CircleShape,
-                        color = Color(0xFFF5F5F5),
+                        // 4. Subtle background for avatar container
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .size(40.dp)
                             .clickable { onCartClick() }
@@ -133,22 +153,29 @@ fun HomeScreen(
                             Icons.Default.ShoppingCart,
                             null,
                             modifier = Modifier.padding(8.dp),
-                            tint = Color.Black
+                            // 5. Icon color
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // 2. Categories (Now Fixed at Top)
+                // 2. Categories
 
 
                 CategorySection(
-                    categories = state.categories, // Use Data from VM
-                    selectedCategory = state.selectedCategoryId, // Use State from VM
-                    onCategoryClick = { onCategorySelect(it) } // Pass event to VM
+                    categories = state.categories,
+                    selectedCategory = state.selectedCategoryId,
+                    onCategoryClick = { onCategorySelect(it) }
                 )
 
-                // Optional: Divider to separate fixed header from scrolling content
-                HorizontalDivider(thickness = 1.dp, color = Color.LightGray.copy(alpha = 0.2f))
+                // Add a tiny bit of bottom padding to the header
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Use Divider from Theme
+                //HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+
+
             }
         }
     ) { innerPadding ->
@@ -160,11 +187,14 @@ fun HomeScreen(
             ),
             modifier = Modifier.fillMaxSize()
         ) {
+
             // 1. Daily Deals
-            item {
-                Spacer(modifier = Modifier.height(16.dp)) // Top spacing
-                DailyDealsSection()
-                Spacer(modifier = Modifier.height(24.dp))
+            if (state.deals.isNotEmpty()) { // Only show if deals exist
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    DailyDealsSection(deals = state.deals) // <--- PASS THE DATA
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
             }
 
             // 2. Popular Section Title
@@ -173,6 +203,7 @@ fun HomeScreen(
                     text = "Popular Near You",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground, // Theme aware
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -182,11 +213,23 @@ fun HomeScreen(
             if (state.isLoading && state.products.isEmpty()) {
                 items(3) { FoodItemShimmer() }
             } else {
-                items(state.products) { product ->
-                    RestaurantCard(
-                        product = product,
-                        onClick = { onProductClick(product) }
-                    )
+                if (state.products.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "No items found",
+                                style = MaterialTheme.typography.bodyLarge, // Typography Applied
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    items(state.products) { product ->
+                        RestaurantCard(
+                            product = product,
+                            onClick = { onProductClick(product) }
+                        )
+                    }
                 }
             }
         }

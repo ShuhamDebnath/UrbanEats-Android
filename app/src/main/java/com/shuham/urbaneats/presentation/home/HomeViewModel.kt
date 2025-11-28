@@ -1,10 +1,13 @@
 package com.shuham.urbaneats.presentation.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shuham.urbaneats.domain.model.Category
+import com.shuham.urbaneats.domain.model.Deal
 import com.shuham.urbaneats.domain.model.Product
 import com.shuham.urbaneats.domain.repository.UserRepository
+import com.shuham.urbaneats.domain.usecase.deal.GetDailyDealsUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetCategoriesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetMenuUseCase
 import com.shuham.urbaneats.domain.usecase.product.RefreshMenuUseCase
@@ -15,7 +18,8 @@ import kotlinx.coroutines.launch
 
 data class HomeState(
     val products: List<Product> = emptyList(),
-    val categories: List<Category> = emptyList(), // <--- NEW
+    val categories: List<Category> = emptyList(),
+    val deals: List<Deal> = emptyList(),
     val selectedCategoryId: String = "all",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -26,6 +30,7 @@ class HomeViewModel(
     private val refreshMenuUseCase: RefreshMenuUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val getDailyDealsUseCase: GetDailyDealsUseCase,
     private val userRepository: UserRepository
 ) : ViewModel() {
 
@@ -44,6 +49,7 @@ class HomeViewModel(
         refreshData()
         loadCategories()
         observeSelectedAddress()
+        loadDeals()
     }
 
     private fun observeMenu() {
@@ -53,6 +59,19 @@ class HomeViewModel(
                 // Re-apply current filter whenever DB updates
                 applyFilter(_state.value.selectedCategoryId)
             }
+        }
+    }
+
+    private fun loadDeals() {
+        viewModelScope.launch {
+            // Observe Local DB
+            getDailyDealsUseCase.getDeals().collect { deals ->
+                _state.update { it.copy(deals = deals) }
+            }
+        }
+        // Refresh from Network
+        viewModelScope.launch {
+            getDailyDealsUseCase.refreshDeals()
         }
     }
 
@@ -99,6 +118,8 @@ class HomeViewModel(
                 val allCat = Category("all", "All", "")
                 val list = listOf(allCat) + (result.data ?: emptyList())
                 _state.update { it.copy(categories = list) }
+            }else{
+                println("Network Error: ${result.message}")
             }
         }
     }

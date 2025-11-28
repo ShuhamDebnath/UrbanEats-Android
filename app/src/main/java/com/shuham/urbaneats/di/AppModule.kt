@@ -9,12 +9,14 @@ import com.shuham.urbaneats.data.remote.KtorClient
 import com.shuham.urbaneats.data.repository.AuthRepositoryImpl
 import com.shuham.urbaneats.data.repository.CartRepositoryImpl
 import com.shuham.urbaneats.data.repository.CategoryRepositoryImpl
+import com.shuham.urbaneats.data.repository.DealRepositoryImpl
 import com.shuham.urbaneats.data.repository.OrderRepositoryImpl
 import com.shuham.urbaneats.data.repository.ProductRepositoryImpl
 import com.shuham.urbaneats.data.repository.UserRepositoryImpl
 import com.shuham.urbaneats.domain.repository.AuthRepository
 import com.shuham.urbaneats.domain.repository.CartRepository
 import com.shuham.urbaneats.domain.repository.CategoryRepository
+import com.shuham.urbaneats.domain.repository.DealRepository
 import com.shuham.urbaneats.domain.repository.OrderRepository
 import com.shuham.urbaneats.domain.repository.ProductRepository
 import com.shuham.urbaneats.domain.repository.UserRepository
@@ -26,6 +28,7 @@ import com.shuham.urbaneats.domain.usecase.cart.GetCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.PlaceOrderUseCase
 import com.shuham.urbaneats.domain.usecase.cart.RemoveFromCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.UpdateCartQuantityUseCase
+import com.shuham.urbaneats.domain.usecase.deal.GetDailyDealsUseCase
 import com.shuham.urbaneats.domain.usecase.order.GetOrderDetailsUseCase
 import com.shuham.urbaneats.domain.usecase.order.GetOrdersUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetCategoriesUseCase
@@ -73,6 +76,7 @@ val appModule = module {
     singleOf(::OrderRepositoryImpl) bind OrderRepository::class
     singleOf(::CategoryRepositoryImpl) bind CategoryRepository::class
     singleOf(::UserRepositoryImpl) bind UserRepository::class
+    singleOf(::DealRepositoryImpl) bind DealRepository::class
 
 
     // 3. UseCases
@@ -95,6 +99,7 @@ val appModule = module {
     factoryOf(::GetCategoriesUseCase)
     factoryOf(::AddressViewModel)
     factoryOf(::GetOrderDetailsUseCase)
+    factoryOf(::GetDailyDealsUseCase)
 
 
     // 4. ViewModel
@@ -125,6 +130,7 @@ val appModule = module {
     // 2. Provide DAO (So Repositories can use it directly)
     single { get<UrbanEatsDatabase>().productDao() }
     single { get<UrbanEatsDatabase>().cartDao() }
+    single { get<UrbanEatsDatabase>().dealDao() }
 
     // Add to AppModule
     single { TokenManager(androidContext()) }

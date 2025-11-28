@@ -1,16 +1,10 @@
 package com.shuham.urbaneats.presentation.home.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,54 +16,96 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.shuham.urbaneats.domain.model.Product
+import com.shuham.urbaneats.ui.theme.UrbanGold
 
 @Composable
 fun RestaurantCard(
     product: Product,
     onClick: () -> Unit
 ) {
-    Column(
+    // 1. The Container Card
+    Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 8.dp), // Spacing between items
+        shape = RoundedCornerShape(20.dp), // Smooth corners
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // "Little Elevated"
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        // Image
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(0.dp),
-            modifier = Modifier.fillMaxWidth().height(200.dp)
-        ) {
+        Column{
+            // 2. Image (Rounded inside the card)
             AsyncImage(
                 model = product.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(RoundedCornerShape(topStart = 16.dp , topEnd = 16.dp)) // Matches the card's roundness style
             )
-        }
+            Column(
+                modifier = Modifier.padding(12.dp) // Inner spacing (Frame effect)
+            ) {
 
-        Spacer(modifier = Modifier.height(12.dp))
+                // 3. Title
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-        // Title
-        Text(
-            text = product.name, // e.g., "The Golden Spoon"
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+                Spacer(modifier = Modifier.height(6.dp))
 
-        Spacer(modifier = Modifier.height(4.dp))
+                // 4. Metadata Row (Rating • Time • Price)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Star Icon
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = UrbanGold, // Gold Star
+                        modifier = Modifier.size(16.dp)
+                    )
 
-        // Metadata Row (Rating • Time • Price)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Star, null, tint = Color(0xFFFFB300), modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "${product.rating}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
 
-            Text(text = "  •  ", color = Color.Gray)
-            Text(text = "20-30 min", color = Color.Gray, fontSize = 14.sp) // Mock data
+                    // Rating
+                    Text(
+                        text = "${product.rating}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-            Text(text = "  •  ", color = Color.Gray)
-            Text(text = "$${product.price}", color = Color.Gray, fontSize = 14.sp)
+                    // Separator
+                    Text(
+                        text = "  •  ",
+                        color = Color.LightGray,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    // Time (Mock data for now, or add to Product model)
+                    Text(
+                        text = "20-30 min",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+
+                    Text(
+                        text = "  •  ",
+                        color = Color.LightGray,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    // Price
+                    Text(
+                        text = "$${product.price}",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ const productsRoute = require('./routes/products');
 const ordersRoute = require('./routes/orders');
 const categoriesRoute = require('./routes/categories');
 const userRoute = require('./routes/user');
+const dealsRoute = require('./routes/deals');
 
 // Configuration
 dotenv.config();
@@ -29,6 +30,7 @@ app.use('/api/products', productsRoute);
 app.use('/api/orders', ordersRoute);
 app.use('/api/categories', categoriesRoute);
 app.use('/api/user', userRoute);
+app.use('/api/deals', dealsRoute);
 
 // Base Route
 app.get('/', (req, res) => {
