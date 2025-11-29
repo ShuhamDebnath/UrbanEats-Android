@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,36 +83,55 @@ fun CheckoutScreen(
     var selectedPayment by remember { mutableStateOf("Visa") }
 
 
+    val focusManager = LocalFocusManager.current
+
     Scaffold(
-        containerColor = Color(0xFFF5F5F5), // Light Gray Background
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Checkout", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F5F5)
+                title = {
+                    Text(
+                        "Checkout",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            "Back",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             )
         },
         bottomBar = {
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 16.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = onPlaceOrder,
+                    onClick = {
+                        focusManager.clearFocus()
+                        onPlaceOrder()
+                    },
                     enabled = !state.isLoading && state.address != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary, // Theme Primary
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                    )
                 ) {
                     if (state.isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
@@ -141,16 +161,23 @@ fun CheckoutScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 val displayAddress = state.address ?: Address(label = "Address", fullAddress = "Add Address")
+                val textColor = if (state.address == null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
 
                 AddressCard(
                     address = displayAddress,
+                    textColor = textColor,
                     onClick = { onEditAddress() } // Clicking card also triggers nav
                 )
             }
 
             // 2. Delivery Options Section
             item {
-                Text("Delivery Options", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(
+                    "Delivery Options",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 DeliveryOptionCard(
@@ -172,18 +199,23 @@ fun CheckoutScreen(
 
             // 3. Payment Method Section
             item {
-                Text("Payment Method", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(
+                    "Payment Method",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 PaymentMethodCard(
-                    iconUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png", // Visa Logo URL
+                    iconUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png",
                     title = "Visa •••• 1234",
                     isSelected = selectedPayment == "Visa",
                     onClick = { selectedPayment = "Visa" }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 PaymentMethodCard(
-                    iconUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Apple_logo_white.svg/1200px-Apple_logo_white.svg.png", // Apple Logo (needs dark bg usually, mocking here)
+                    iconUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Apple_logo_white.svg/1200px-Apple_logo_white.svg.png",
                     title = "Apple Pay",
                     isSelected = selectedPayment == "Apple",
                     isDarkIcon = true,
@@ -192,16 +224,19 @@ fun CheckoutScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Add New Method Button
                 Button(
                     onClick = {},
                     modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFE0B2)), // Light Orange
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer), // Light Orange
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(Icons.Default.Add, null, tint = Color(0xFFE65100))
+                    Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Add New Method", color = Color(0xFFE65100), fontWeight = FontWeight.Bold)
+                    Text(
+                        "Add New Method",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -217,10 +252,15 @@ fun SectionHeader(title: String, actionText: String, onAction: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(
+            title,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
         Text(
             text = actionText,
-            color = Color(0xFFE65100),
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
             modifier = Modifier.clickable { onAction() }
@@ -230,10 +270,10 @@ fun SectionHeader(title: String, actionText: String, onAction: () -> Unit) {
 
 
 @Composable
-fun AddressCard(address: Address, textColor: Color = Color.Gray, onClick: () -> Unit) {
+fun AddressCard(address: Address, textColor: Color, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(0.dp),
         modifier = Modifier.fillMaxWidth().clickable { onClick() }
     ) {
@@ -246,22 +286,32 @@ fun AddressCard(address: Address, textColor: Color = Color.Gray, onClick: () -> 
                 modifier = Modifier
                     .size(60.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF0F0F0))
+                    .background(MaterialTheme.colorScheme.surfaceVariant) // Theme variant bg
             ) {
-                Icon(Icons.Default.LocationOn, null, modifier = Modifier.align(Alignment.Center), tint = Color.Gray)
+                Icon(
+                    Icons.Default.LocationOn,
+                    null,
+                    modifier = Modifier.align(Alignment.Center),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text(address.label, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(
+                    "Home",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = address.fullAddress,
                     color = textColor,
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
-                    fontWeight = if (textColor == Color.Gray) FontWeight.Normal else FontWeight.Bold
+                    fontWeight = if (textColor == MaterialTheme.colorScheme.primary) FontWeight.Bold else FontWeight.Normal
                 )
             }
         }
@@ -270,10 +320,15 @@ fun AddressCard(address: Address, textColor: Color = Color.Gray, onClick: () -> 
 
 @Composable
 fun DeliveryOptionCard(title: String, subtitle: String, price: String, isSelected: Boolean, onClick: () -> Unit) {
+    // Dynamic Colors
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val iconColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isSelected) Color(0xFFFFF3E0) else Color.White),
-        border = if (isSelected) BorderStroke(1.5.dp, Color(0xFFE65100)) else BorderStroke(0.dp, Color.Transparent),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = BorderStroke(1.5.dp, borderColor),
         elevation = CardDefaults.cardElevation(0.dp),
         modifier = Modifier.fillMaxWidth().clickable { onClick() }
     ) {
@@ -286,25 +341,32 @@ fun DeliveryOptionCard(title: String, subtitle: String, price: String, isSelecte
                 Icon(
                     imageVector = if(isSelected) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
                     contentDescription = null,
-                    tint = if(isSelected) Color(0xFFE65100) else Color.LightGray
+                    tint = iconColor
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text(title, fontWeight = FontWeight.Bold)
-                    Text(subtitle, color = if(isSelected) Color(0xFFE65100) else Color.Gray, fontSize = 14.sp)
+                    Text(title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        subtitle,
+                        color = if(isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
+                    )
                 }
             }
-            Text(price, fontWeight = FontWeight.Bold)
+            Text(price, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
 
 @Composable
 fun PaymentMethodCard(iconUrl: String, title: String, isSelected: Boolean, isDarkIcon: Boolean = false, onClick: () -> Unit) {
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val iconColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = if (isSelected) BorderStroke(1.5.dp, Color(0xFFE65100)) else BorderStroke(0.dp, Color.Transparent),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.5.dp, borderColor),
         modifier = Modifier.fillMaxWidth().clickable { onClick() }
     ) {
         Row(
@@ -313,10 +375,11 @@ fun PaymentMethodCard(iconUrl: String, title: String, isSelected: Boolean, isDar
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // Icon Placeholder
                 Surface(
                     shape = RoundedCornerShape(4.dp),
                     color = if(isDarkIcon) Color.Black else Color.White,
-                    border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier.size(40.dp, 28.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -329,13 +392,13 @@ fun PaymentMethodCard(iconUrl: String, title: String, isSelected: Boolean, isDar
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(title, fontWeight = FontWeight.Medium)
+                Text(title, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
             }
 
             Icon(
                 imageVector = if(isSelected) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
                 contentDescription = null,
-                tint = if(isSelected) Color(0xFFE65100) else Color.LightGray
+                tint = iconColor
             )
         }
     }

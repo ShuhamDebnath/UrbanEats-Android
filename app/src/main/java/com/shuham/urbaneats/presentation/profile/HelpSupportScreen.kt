@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 
 // 1. ROUTE
 @Composable
@@ -46,7 +45,6 @@ fun HelpSupportScreen(
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
 
-    // Dummy FAQ Data
     val faqList = listOf(
         FAQItem("Where is my order?", "You can track your order status in real-time from the 'My Orders' section."),
         FAQItem("How do I cancel an order?", "You can cancel an order within 5 minutes of placing it. Go to Orders > Select Order > Cancel."),
@@ -60,16 +58,26 @@ fun HelpSupportScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFFF5F5F5),
+        containerColor = MaterialTheme.colorScheme.background, // Theme Background
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Help & Support", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Help & Support",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground // Theme Text
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F5F5)
+                    containerColor = MaterialTheme.colorScheme.background // Theme Background
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            "Back",
+                            tint = MaterialTheme.colorScheme.onBackground // Theme Icon
+                        )
                     }
                 }
             )
@@ -88,19 +96,38 @@ fun HelpSupportScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
-                placeholder = { Text("Search for help...") },
-                leadingIcon = { Icon(Icons.Default.Search, null, tint = Color.Gray) },
+                placeholder = {
+                    Text(
+                        "Search for help...",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant // Theme Gray
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant // Theme Gray
+                    )
+                },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface, // Theme Surface
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color(0xFFE65100) // Brand Orange
+                    focusedBorderColor = MaterialTheme.colorScheme.primary, // Theme Primary
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 singleLine = true
             )
 
-            Text("Frequently Asked Questions", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(bottom = 12.dp))
+            Text(
+                "Frequently Asked Questions",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = MaterialTheme.colorScheme.onBackground, // Theme Text
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
 
             // 2. FAQ List
             LazyColumn(
@@ -111,12 +138,17 @@ fun HelpSupportScreen(
                     FAQCard(faq)
                 }
 
-                // Footer Space
                 item { Spacer(modifier = Modifier.height(24.dp)) }
             }
 
             // 3. Contact Section
-            Text("Still need help?", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(vertical = 12.dp))
+            Text(
+                "Still need help?",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = MaterialTheme.colorScheme.onBackground, // Theme Text
+                modifier = Modifier.padding(vertical = 12.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
@@ -136,7 +168,7 @@ fun HelpSupportScreen(
                     modifier = Modifier.weight(1f),
                     onClick = {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = "mailto:support@urbaneats.com".toUri()
+                            data = Uri.parse("mailto:support@urbaneats.com")
                             putExtra(Intent.EXTRA_SUBJECT, "Support Request")
                         }
                         context.startActivity(intent)
@@ -157,7 +189,7 @@ fun FAQCard(faq: FAQItem) {
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Theme Surface
         elevation = CardDefaults.cardElevation(0.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -172,12 +204,13 @@ fun FAQCard(faq: FAQItem) {
                 Text(
                     text = faq.question,
                     fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface, // Theme Text
                     modifier = Modifier.weight(1f)
                 )
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = Color.Gray
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant // Theme Gray
                 )
             }
 
@@ -187,12 +220,13 @@ fun FAQCard(faq: FAQItem) {
                     HorizontalDivider(
                         Modifier,
                         DividerDefaults.Thickness,
-                        color = Color.LightGray.copy(alpha = 0.3f)
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                     )
+                    // Theme Divider
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = faq.answer,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Gray
                         fontSize = 14.sp,
                         lineHeight = 20.sp
                     )
@@ -211,7 +245,7 @@ fun ContactCard(
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Theme Surface
         modifier = modifier.clickable { onClick() }
     ) {
         Column(
@@ -221,11 +255,16 @@ fun ContactCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color(0xFFE65100),
+                tint = MaterialTheme.colorScheme.primary, // Theme Primary
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(
+                title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface // Theme Text
+            )
         }
     }
 }

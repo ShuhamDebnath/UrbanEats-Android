@@ -42,7 +42,6 @@ fun SearchRoute(
         state = state,
         onQueryChange = viewModel::onQueryChange,
         onProductClick = onProductClick,
-        onAddClick = { /* Quick Add */ },
         onFavoriteClick = { /* Handle Favorite */ },
         onCancelClick = { viewModel.onQueryChange("") } // Clear search
     )
@@ -54,7 +53,6 @@ fun SearchScreen(
     state: SearchState,
     onQueryChange: (String) -> Unit,
     onProductClick: (Product) -> Unit,
-    onAddClick: (Product) -> Unit,
     onFavoriteClick: (Product) -> Unit,
     onCancelClick: () -> Unit
 ) {
@@ -78,12 +76,12 @@ fun SearchScreen(
                         text = "Search",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onBackground // Theme Text
                     )
                     Text(
                         text = "Cancel",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color(0xFFE65100), // Orange
+                        color = MaterialTheme.colorScheme.primary, // Theme Primary (Orange)
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { onCancelClick() }
                     )
@@ -98,15 +96,28 @@ fun SearchScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    placeholder = { Text("Search food or restaurants", color = Color.Gray) },
-                    leadingIcon = { Icon(Icons.Default.Search, null, tint = Color.Gray) },
+                    placeholder = {
+                        Text(
+                            "Search food or restaurants",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant // Theme Secondary Text
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                        Icons.Default.Search,
+                        null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )  },
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFF5F5F5),
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        disabledContainerColor = Color(0xFFF5F5F5),
+                        // Use Surface Variant (Light Gray in Light Mode, Darker Gray in Dark Mode)
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
                     singleLine = true
                 )
@@ -127,6 +138,7 @@ fun SearchScreen(
                             text = "Recent Searches",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                     }
@@ -143,6 +155,7 @@ fun SearchScreen(
                             text = "Popular Cuisines",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                     }
@@ -167,14 +180,23 @@ fun SearchScreen(
                     if (state.isLoading) {
                         items(3) { FoodItemShimmer() }
                     } else if (state.error != null) {
-                        item { Text("Error: ${state.error}", color = Color.Red) }
+                        item {
+                            Text(
+                                "Error: ${state.error}",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     } else if (state.results.isEmpty()) {
-                        item { Text("No results found", color = Color.Gray) }
+                        item {
+                            Text(
+                                "No results found",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     } else {
                         items(state.results) { product ->
                             FoodItemCard(
                                 foodProduct = product,
-                                onAddClick = { onAddClick(product) },
                                 onItemClick = { onProductClick(product) },
                                 onFavoriteClick = { onFavoriteClick(product) }
                             )
@@ -198,19 +220,29 @@ fun RecentSearchRow(text: String) {
     ) {
         Surface(
             shape = CircleShape,
-            color = Color(0xFFF0F0F0),
+            color = MaterialTheme.colorScheme.surfaceVariant, // Theme gray circle
             modifier = Modifier.size(36.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.History,
                 contentDescription = null,
                 modifier = Modifier.padding(8.dp),
-                tint = Color.Gray
+                tint = MaterialTheme.colorScheme.onSurfaceVariant // Theme icon color
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(text, modifier = Modifier.weight(1f), fontSize = 16.sp, color = Color.DarkGray)
-        Icon(Icons.Default.Close, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+        Text(
+            text = text,
+            modifier = Modifier.weight(1f),
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface // Theme text
+        )
+        Icon(
+            Icons.Default.Close,
+            null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
@@ -243,7 +275,7 @@ fun CuisineCard(data: Pair<String, String>, modifier: Modifier = Modifier) {
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = modifier.height(160.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {

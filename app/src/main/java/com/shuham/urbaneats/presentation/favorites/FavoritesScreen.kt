@@ -47,16 +47,26 @@ fun FavoritesScreen(
     onRemoveFavorite: (Product) -> Unit
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.background, // Theme Background
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("My Favorites", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                title = {
+                    Text(
+                        "My Favorites",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground // Theme Text
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background // Theme Background
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground // Theme Icon
+                        )
                     }
                 }
             )
@@ -67,7 +77,11 @@ fun FavoritesScreen(
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No favorites yet ❤️", color = Color.Gray)
+                Text(
+                    "No favorites yet ❤️",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Gray
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
         } else {
             LazyColumn(
@@ -81,7 +95,6 @@ fun FavoritesScreen(
                 items(state.favorites) { product ->
                     FoodItemCard(
                         foodProduct = product,
-                        onAddClick = { },
                         onItemClick = { onFoodClick(product) },
                         onFavoriteClick = { onRemoveFavorite(product) }
                     )

@@ -63,7 +63,7 @@ fun LoginRoute(
         state = state,
         onAction = viewModel::onAction,
         onSignUpClick = onNavigateToSignUp,
-        onForgotPasswordClick = { /* TODO */ }
+        onForgotPasswordClick = { Toast.makeText(context, "Feature coming soon", Toast.LENGTH_SHORT).show() }
     )
 }
 
@@ -76,14 +76,13 @@ fun LoginScreen(
     onSignUpClick: () -> Unit,
     onForgotPasswordClick: () -> Unit
 ) {
-    // Local UI state for password visibility
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(Color.White)) {
+    // Use a BoxWithConstraints if you want to dynamically size image,
+    // but standard Box works if we handle scrolling right.
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
 
-        // 1. Hero Image (Top)
+        // 1. Hero Image (Fixed at top)
         AsyncImage(
             //model = "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800", // High quality burger image
             model = R.drawable.burger,
@@ -91,24 +90,27 @@ fun LoginScreen(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(350.dp) // Occupy top 40% roughly
+                .height(350.dp)
                 .align(Alignment.TopCenter)
         )
 
-        // 2. The White Sheet (Content)
+        // 2. The Content Sheet
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 300.dp), // Overlap the image by 50dp
+                .padding(top = 280.dp), // Overlap logic
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface, // Theme Surface (White/DarkGrey)
             shadowElevation = 16.dp
         ) {
+            // Scrollable Container
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                    .padding(horizontal = 24.dp, vertical = 32.dp)
+                    .navigationBarsPadding() // FIX: Ensures bottom content isn't hidden by gesture bar
+                    .imePadding(), // FIX: Pushes content up when keyboard opens
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
@@ -117,7 +119,7 @@ fun LoginScreen(
                     text = "Welcome Back!",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A),
+                    color = MaterialTheme.colorScheme.onSurface, // Theme Text
                     modifier = Modifier.align(Alignment.Start)
                 )
 
@@ -128,30 +130,29 @@ fun LoginScreen(
                     text = "Email or Phone Number",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier
-                        .align(Alignment.Start)
-                        .padding(bottom = 8.dp)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Secondary Text
+                    modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
                 )
 
                 TextField(
                     value = state.email,
                     onValueChange = { onAction(LoginAction.OnEmailChange(it)) },
-                    placeholder = { Text("Enter your email or phone", color = Color.Gray) },
+                    placeholder = { Text("Enter your email or phone", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFF5F5F5),
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), // Theme Light Gray
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        errorContainerColor = Color(0xFFFDE7E9)
+                        errorContainerColor = MaterialTheme.colorScheme.errorContainer
                     ),
                     singleLine = true,
                     isError = state.emailError != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
                 if (state.emailError != null) {
-                    Text(state.emailError, color = Color.Red, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.Start))
+                    Text(state.emailError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.Start))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -161,20 +162,19 @@ fun LoginScreen(
                     text = "Password",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier
-                        .align(Alignment.Start)
-                        .padding(bottom = 8.dp)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
                 )
 
                 TextField(
                     value = state.password,
                     onValueChange = { onAction(LoginAction.OnPasswordChange(it)) },
-                    placeholder = { Text("Enter your password", color = Color.Gray) },
+                    placeholder = { Text("Enter your password", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFF5F5F5),
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
@@ -185,13 +185,14 @@ fun LoginScreen(
                             Icon(
                                 imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = "Toggle Password",
-                                tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
-                // Forgot Password Link (NEW)
+
+                // Forgot Password Link
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -202,7 +203,7 @@ fun LoginScreen(
                         text = "Forgot Password?",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE65100), // Brand Orange for action
+                        color = MaterialTheme.colorScheme.primary, // Brand Orange
                         modifier = Modifier.clickable { onForgotPasswordClick() }
                     )
                 }
@@ -217,10 +218,13 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary, // Brand Orange
+                        contentColor = MaterialTheme.colorScheme.onPrimary // White
+                    )
                 ) {
                     if (state.isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                     } else {
                         Text("Log In", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
@@ -230,9 +234,13 @@ fun LoginScreen(
 
                 // Divider
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray.copy(alpha = 0.5f))
-                    Text("  Or continue with  ", color = Color.Gray, fontSize = 12.sp)
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray.copy(alpha = 0.5f))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+                    Text(
+                        "  Or continue with  ",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -242,6 +250,7 @@ fun LoginScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Ensure these drawables exist, otherwise revert to Text placeholders or download them
                     SocialLoginButton(iconResId = R.drawable.ic_google, onClick = {})
                     SocialLoginButton(iconResId = R.drawable.ic_apple, onClick = {})
                     SocialLoginButton(iconResId = R.drawable.ic_facebook, onClick = {})
@@ -252,7 +261,7 @@ fun LoginScreen(
                 // Footer Register Link
                 val annotatedString = buildAnnotatedString {
                     append("Don't have an account? ")
-                    withStyle(style = SpanStyle(color = Color(0xFFE65100), fontWeight = FontWeight.Bold)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
                         append("Register")
                     }
                 }
@@ -261,8 +270,11 @@ fun LoginScreen(
                     text = annotatedString,
                     modifier = Modifier.clickable { onSignUpClick() },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                // Extra space at bottom to ensure nothing is cut off
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
@@ -272,8 +284,8 @@ fun LoginScreen(
 fun SocialLoginButton(iconResId: Int, onClick: () -> Unit) {
     Surface(
         shape = CircleShape,
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f)),
-        color = Color.White,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .size(56.dp)
             .clickable { onClick() }
@@ -282,7 +294,7 @@ fun SocialLoginButton(iconResId: Int, onClick: () -> Unit) {
             Image(
                 painter = painterResource(id = iconResId),
                 contentDescription = null,
-                modifier = Modifier.size(24.dp) // Adjust size as needed for your icons
+                modifier = Modifier.size(24.dp)
             )
         }
     }

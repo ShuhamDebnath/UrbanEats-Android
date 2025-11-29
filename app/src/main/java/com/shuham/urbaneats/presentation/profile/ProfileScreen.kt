@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.shuham.urbaneats.data.local.UserSession
+import com.shuham.urbaneats.ui.theme.UrbanGold
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -97,14 +98,14 @@ fun ProfileScreen(
     onOptionClick: (String) -> Unit
 ) {
     Scaffold(
-        containerColor = Color(0xFFF5F5F5) // Light Gray Background
+        containerColor = MaterialTheme.colorScheme.background // Theme Background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp), // Global horizontal padding
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(40.dp))
@@ -114,24 +115,22 @@ fun ProfileScreen(
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFA3C4BC)), // Muted Green fallback
+                    .background(MaterialTheme.colorScheme.primaryContainer), // Theme Container
                 contentAlignment = Alignment.Center
             ) {
                 if (!user?.profileImage.isNullOrBlank()) {
-                    // Load Real Image from Cloudinary URL
                     AsyncImage(
-                        model = user.profileImage,
+                        model = user!!.profileImage,
                         contentDescription = "Profile Picture",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-                    // Show Default Icon if no image
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         modifier = Modifier.size(60.dp),
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer // Theme Content
                     )
                 }
             }
@@ -141,15 +140,15 @@ fun ProfileScreen(
             Text(
                 text = user?.name ?: "Guest User",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground // Theme Text
             )
 
-            // Optional: Show Email for clarity
             if (!user?.email.isNullOrBlank()) {
                 Text(
-                    text = user.email,
+                    text = user!!.email!!,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant // Theme Secondary Text
                 )
             }
 
@@ -157,7 +156,7 @@ fun ProfileScreen(
 
             // Gold Member Chip
             Surface(
-                color = Color(0xFFFFF9C4), // Light Yellow
+                color = MaterialTheme.colorScheme.surfaceVariant, // Subtle background
                 shape = RoundedCornerShape(50),
                 modifier = Modifier.height(32.dp)
             ) {
@@ -165,30 +164,32 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
-                    Text("★ Gold Member", color = Color(0xFFFBC02D), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    // Using explicit gold color for badge as it's semantic
+                    Text("★ Gold Member", color = UrbanGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // 2. MENU OPTIONS (Cards)
+            // Used varied container colors for icons to keep visual interest, but mapped to theme logic where possible
+            // Or standardizing them to primaryContainer for consistency in dark mode
 
-            // My Orders (With Reorder Chip)
             ProfileMenuCard(
                 icon = Icons.AutoMirrored.Filled.ReceiptLong,
-                iconBgColor = Color(0xFFFFE0B2), // Light Orange
-                iconTint = Color(0xFFE65100),
+                iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                iconTint = MaterialTheme.colorScheme.primary,
                 title = "My Orders",
                 onClick = { onOptionClick("orders") },
                 trailingContent = {
                     Surface(
-                        color = Color(0xFFFFCCBC),
+                        color = MaterialTheme.colorScheme.errorContainer, // Light Red/Orange feel
                         shape = RoundedCornerShape(50)
                     ) {
                         Text(
                             "Reorder",
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                            color = Color(0xFFD84315),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -200,8 +201,8 @@ fun ProfileScreen(
 
             ProfileMenuCard(
                 icon = Icons.Default.Favorite,
-                iconBgColor = Color(0xFFFFCDD2), // Light Pink
-                iconTint = Color(0xFFD32F2F),
+                iconBgColor = MaterialTheme.colorScheme.errorContainer,
+                iconTint = MaterialTheme.colorScheme.error,
                 title = "Favorites",
                 onClick = { onOptionClick("favorites") }
             )
@@ -210,8 +211,8 @@ fun ProfileScreen(
 
             ProfileMenuCard(
                 icon = Icons.Default.CreditCard,
-                iconBgColor = Color(0xFFFFECB3), // Light Amber
-                iconTint = Color(0xFFFF6F00),
+                iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                iconTint = MaterialTheme.colorScheme.secondary,
                 title = "Payment Methods",
                 onClick = { onOptionClick("payment") }
             )
@@ -220,8 +221,8 @@ fun ProfileScreen(
 
             ProfileMenuCard(
                 icon = Icons.Default.LocationOn,
-                iconBgColor = Color(0xFFFFE0B2),
-                iconTint = Color(0xFFE65100),
+                iconBgColor = MaterialTheme.colorScheme.tertiaryContainer, // Or reuse primary
+                iconTint = MaterialTheme.colorScheme.tertiary,
                 title = "Addresses",
                 onClick = { onOptionClick("addresses") }
             )
@@ -229,9 +230,9 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             ProfileMenuCard(
-                icon = Icons.AutoMirrored.Filled.Help,
-                iconBgColor = Color(0xFFFFE0B2),
-                iconTint = Color(0xFFE65100),
+                icon = Icons.Default.Help,
+                iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
+                iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = "Help & Support",
                 onClick = { onOptionClick("help") }
             )
@@ -240,8 +241,8 @@ fun ProfileScreen(
 
             ProfileMenuCard(
                 icon = Icons.Default.Settings,
-                iconBgColor = Color(0xFFFFE0B2),
-                iconTint = Color(0xFFE65100),
+                iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
+                iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = "Settings",
                 onClick = { onOptionClick("settings") }
             )
@@ -255,8 +256,8 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFEBEE), // Very light pink
-                    contentColor = Color(0xFFD32F2F) // Red text
+                    containerColor = MaterialTheme.colorScheme.errorContainer, // Light Red in Light, Dark Red in Dark
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer // Red Text
                 ),
                 shape = RoundedCornerShape(16.dp),
                 elevation = ButtonDefaults.buttonElevation(0.dp)
@@ -270,7 +271,6 @@ fun ProfileScreen(
 }
 
 // --- COMPONENTS ---
-
 @Composable
 fun ProfileMenuCard(
     icon: ImageVector,
@@ -281,18 +281,14 @@ fun ProfileMenuCard(
     trailingContent: @Composable (() -> Unit)? = null
 ) {
     Card(
-        shape = RoundedCornerShape(24.dp), // Very round corners
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Theme Surface
+        elevation = CardDefaults.cardElevation(0.dp), // Flat style
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Icon Circle
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -306,23 +302,21 @@ fun ProfileMenuCard(
                     modifier = Modifier.size(24.dp)
                 )
             }
-
             Spacer(modifier = Modifier.width(16.dp))
-
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface, // Theme Text
                 modifier = Modifier.weight(1f)
             )
-
             if (trailingContent != null) {
                 trailingContent()
             } else {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                     contentDescription = null,
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), // Theme Gray
                     modifier = Modifier.size(16.dp)
                 )
             }

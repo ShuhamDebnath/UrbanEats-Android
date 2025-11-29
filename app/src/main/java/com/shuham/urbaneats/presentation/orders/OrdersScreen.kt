@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shuham.urbaneats.domain.model.Order
+import com.shuham.urbaneats.ui.theme.UrbanGreen
 import org.koin.androidx.compose.koinViewModel
 
 // 1. ROUTE
@@ -49,39 +50,56 @@ fun OrdersScreen(
     onOrderClick: (Order) -> Unit
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.background, // Theme Background
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("My Orders", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "My Orders",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground // Theme Text
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            "Back",
+                            tint = MaterialTheme.colorScheme.onBackground // Theme Icon
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, "Refresh")
+                        Icon(
+                            Icons.Default.Refresh,
+                            "Refresh",
+                            tint = MaterialTheme.colorScheme.onBackground // Theme Icon
+                        )
                     }
                 }
             )
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        ) {
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
+                )
             } else if (state.error != null) {
-                Text(state.error, color = Color.Red, modifier = Modifier.align(Alignment.Center))
+                Text(
+                    state.error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             } else if (state.orders.isEmpty()) {
                 Text(
                     "No orders yet",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Gray
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
@@ -90,7 +108,7 @@ fun OrdersScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(state.orders) { order ->
-                        OrderCard(order, onOrderClick)
+                        OrderCard(order = order, onOrderClick = { onOrderClick(order) })
                     }
                 }
             }
@@ -102,21 +120,17 @@ fun OrdersScreen(
 @Composable
 fun OrderCard(
     order: Order,
-    onOrderClick: (Order) -> Unit
+    onOrderClick: () -> Unit
 ) {
     Card(
+        onClick = onOrderClick ,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Theme Surface
         elevation = CardDefaults.cardElevation(0.dp),
-        // Add a subtle border for structure
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f))
+        // Subtle border based on theme outline
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .clickable {
-                    onOrderClick(order)
-                }) {
+        Column(modifier = Modifier.padding(16.dp)) {
             // Header: Date + Status
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -125,21 +139,25 @@ fun OrderCard(
                 Text(
                     text = "Date: ${order.date}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant // Theme Gray
                 )
 
                 // Status Chip
+                val isDelivered = order.status == "Delivered"
+                // Use UrbanGreen for success, Primary (Orange) for pending
+                val statusColor = if(isDelivered) UrbanGreen else MaterialTheme.colorScheme.primary
+                // Use SurfaceVariant or a light tint for background
+                val statusBg = if(isDelivered) UrbanGreen.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+
                 Surface(
-                    color = if (order.status == "Delivered") Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
+                    color = statusBg,
                     shape = RoundedCornerShape(50),
                 ) {
                     Text(
                         text = order.status,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (order.status == "Delivered") Color(0xFF2E7D32) else Color(
-                            0xFFEF6C00
-                        ),
+                        color = statusColor,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -153,13 +171,14 @@ fun OrderCard(
                     Text(
                         text = "${item.quantity}x ",
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary, // Theme Primary
                         fontSize = 14.sp
                     )
                     Text(
                         text = item.name,
                         maxLines = 1,
                         fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface, // Theme Text
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -169,8 +188,9 @@ fun OrderCard(
             HorizontalDivider(
                 Modifier,
                 DividerDefaults.Thickness,
-                color = Color.LightGray.copy(alpha = 0.2f)
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
             )
+            // Theme Divider
             Spacer(modifier = Modifier.height(12.dp))
 
             // Footer: ID + Total
@@ -182,12 +202,13 @@ fun OrderCard(
                 Text(
                     text = "ID: ...${order.id.takeLast(6)}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant // Theme Gray
                 )
                 Text(
                     text = "$${String.format("%.2f", order.total)}",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface // Theme Text
                 )
             }
         }

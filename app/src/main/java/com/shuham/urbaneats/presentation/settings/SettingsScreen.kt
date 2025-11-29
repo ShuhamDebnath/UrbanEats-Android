@@ -104,16 +104,26 @@ fun SettingsScreen(
 
 
     Scaffold(
-        containerColor = Color(0xFFF5F5F5),
+        containerColor = MaterialTheme.colorScheme.background, // Theme Background
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F5F5)
+                title = {
+                    Text(
+                        "Settings",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground // Theme Text
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            "Back",
+                            tint = MaterialTheme.colorScheme.onBackground // Theme Icon
+                        )
                     }
                 }
             )
@@ -131,6 +141,7 @@ fun SettingsScreen(
             SettingsActionCard(
                 icon = Icons.Default.Person,
                 title = "Edit Profile",
+                subtitle = currentUser?.name,
                 onClick = { showProfileDialog = true }
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -160,15 +171,7 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-//            // 3. PREFERENCES
-//            SettingsSectionTitle("Preferences")
-//            SettingsSwitchCard(
-//                icon = Icons.Default.DarkMode,
-//                title = "Dark Mode",
-//                checked = state.isDarkTheme,
-//                onCheckedChange = onToggleTheme
-//            )
-            // 2. PREFERENCES
+            // 3. PREFERENCES
             SettingsSectionTitle("Preferences")
             SettingsActionCard(
                 icon = Icons.Default.DarkMode,
@@ -176,8 +179,6 @@ fun SettingsScreen(
                 subtitle = state.selectedTheme.replaceFirstChar { it.uppercase() },
                 onClick = { showThemeDialog = true }
             )
-
-
             Spacer(modifier = Modifier.height(12.dp))
             SettingsActionCard(
                 icon = Icons.Default.Language,
@@ -201,7 +202,7 @@ fun SettingsScreen(
             Text(
                 text = "App Version 1.0.0",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Gray
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             Spacer(modifier = Modifier.height(24.dp))
@@ -238,7 +239,6 @@ fun SettingsScreen(
     if (showPasswordDialog) {
         ChangePasswordDialog(
             onDismiss = { showPasswordDialog = false },
-            isLoading = state.isUpdating,
             onConfirm = { old, new ->
                 onChangePassword(old, new)
                 showPasswordDialog = false
@@ -249,257 +249,13 @@ fun SettingsScreen(
 
 // --- COMPONENTS ---
 
-
-@Composable
-fun ChangePasswordDialog(
-    onDismiss: () -> Unit,
-    isLoading: Boolean,
-    onConfirm: (String, String) -> Unit
-) {
-    var oldPass by remember { mutableStateOf("") }
-    var newPass by remember { mutableStateOf("") }
-    var confirmPass by remember { mutableStateOf("") }
-
-    // Visibility States
-    var oldVisible by remember { mutableStateOf(false) }
-    var newVisible by remember { mutableStateOf(false) }
-    var confirmVisible by remember { mutableStateOf(false) }
-
-    var error by remember { mutableStateOf<String?>(null) }
-
-    AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismiss() },
-        title = { Text("Change Password") },
-        text = {
-            Column {
-                // Old Password
-                OutlinedTextField(
-                    value = oldPass,
-                    onValueChange = { oldPass = it },
-                    label = { Text("Old Password") },
-                    singleLine = true,
-                    visualTransformation = if (oldVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        val image = if (oldVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                        IconButton(onClick = { oldVisible = !oldVisible }) {
-                            Icon(image, "Toggle Visibility")
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // New Password
-                OutlinedTextField(
-                    value = newPass,
-                    onValueChange = { newPass = it },
-                    label = { Text("New Password") },
-                    singleLine = true,
-                    visualTransformation = if (newVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        val image = if (newVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                        IconButton(onClick = { newVisible = !newVisible }) {
-                            Icon(image, "Toggle Visibility")
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Confirm Password
-                OutlinedTextField(
-                    value = confirmPass,
-                    onValueChange = { confirmPass = it },
-                    label = { Text("Confirm New Password") },
-                    singleLine = true,
-                    visualTransformation = if (confirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    isError = error != null,
-                    trailingIcon = {
-                        val image = if (confirmVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                        IconButton(onClick = { confirmVisible = !confirmVisible }) {
-                            Icon(image, "Toggle Visibility")
-                        }
-                    }
-                )
-
-                if (error != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (newPass != confirmPass) {
-                        error = "Passwords do not match"
-                    } else if (newPass.length < 6) {
-                        error = "Password must be at least 6 characters"
-                    } else {
-                        onConfirm(oldPass, newPass)
-                    }
-                },
-                enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
-            ) { Text("Update") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isLoading) { Text("Cancel") }
-        },
-        containerColor = Color.White
-    )
-}
-
-
-@Composable
-fun EditProfileDialog(
-    currentName: String,
-    currentImageUrl: String?,
-    isLoading: Boolean,
-    onDismiss: () -> Unit,
-    onSave: (String, String?) -> Unit
-) {
-    var name by remember { mutableStateOf(currentName) }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    val context = LocalContext.current
-
-    // 1. Image Picker Launcher (System Picker)
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        imageUri = uri
-    }
-
-    AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismiss() }, // Prevent dismiss while loading
-        title = { Text("Edit Profile") },
-        text = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Profile Image Picker
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray)
-                        .clickable(enabled = !isLoading) { // Disable click while loading
-                            launcher.launch("image/*")
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    // LOGIC: Show New Image (if picked) OR Current Image (from server) OR Default Icon
-                    if (imageUri != null) {
-                        AsyncImage(
-                            model = imageUri,
-                            contentDescription = "New Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else if (!currentImageUrl.isNullOrBlank()) {
-                        AsyncImage(
-                            model = currentImageUrl,
-                            contentDescription = "Current Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Icon(Icons.Default.Edit, null, tint = Color.White)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Full Name") },
-                    singleLine = true,
-                    enabled = !isLoading // Disable input while loading
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    // Convert URI to Base64
-                    val base64Image = imageUri?.let { uri ->
-                        try {
-                            val inputStream = context.contentResolver.openInputStream(uri)
-                            val bytes = inputStream?.readBytes()
-                            inputStream?.close()
-                            if (bytes != null) Base64.encodeToString(
-                                bytes,
-                                Base64.DEFAULT
-                            ) else null
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            null
-                        }
-                    }
-                    onSave(name, base64Image)
-                }
-            ) { Text("Save") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
-    )
-}
-
-// ... Reusable Components (ThemeSelectionDialog, SettingsActionCard etc.) ...
-// (Include previous helper components here)
-@Composable
-fun ThemeSelectionDialog(
-    currentTheme: String,
-    onThemeSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Choose Theme") },
-        text = {
-            Column {
-                ThemeOption("System Default", "system", currentTheme, onThemeSelected)
-                ThemeOption("Light", "light", currentTheme, onThemeSelected)
-                ThemeOption("Dark", "dark", currentTheme, onThemeSelected)
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
-    )
-}
-
-@Composable
-fun ThemeOption(
-    text: String,
-    value: String,
-    currentTheme: String,
-    onSelect: (String) -> Unit
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .selectable(
-                selected = (text == currentTheme),
-                onClick = { onSelect(value) },
-                role = Role.RadioButton
-            )
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(selected = (value == currentTheme), onClick = null)
-        Spacer(Modifier.width(16.dp))
-        Text(text)
-    }
-}
-
 @Composable
 fun SettingsSectionTitle(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = Color.Gray,
+        color = MaterialTheme.colorScheme.primary, // Theme Primary
         modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
     )
 }
@@ -513,11 +269,9 @@ fun SettingsActionCard(
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Theme Surface
         elevation = CardDefaults.cardElevation(0.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -526,30 +280,33 @@ fun SettingsActionCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.colorScheme.primary, // Theme Primary
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, fontWeight = FontWeight.Medium)
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface // Theme Text
+                )
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant // Theme Secondary Text
                     )
                 }
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
-                tint = Color.LightGray,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Gray
                 modifier = Modifier.size(16.dp)
             )
         }
     }
 }
-
 
 @Composable
 fun SettingsSwitchCard(
@@ -560,7 +317,7 @@ fun SettingsSwitchCard(
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Theme Surface
         elevation = CardDefaults.cardElevation(0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -571,22 +328,288 @@ fun SettingsSwitchCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color(0xFFE65100),
+                tint = MaterialTheme.colorScheme.primary, // Theme Primary
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Text(text = title, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+            Text(
+                text = title,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSurface // Theme Text
+            )
 
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFFE65100),
-                    uncheckedThumbColor = Color.Gray,
-                    uncheckedTrackColor = Color.LightGray.copy(alpha = 0.3f)
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             )
         }
+    }
+}
+
+@Composable
+fun EditProfileDialog(
+    currentName: String,
+    currentImageUrl: String?,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (String, String?) -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? -> imageUri = uri }
+
+    AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        containerColor = MaterialTheme.colorScheme.surface, // Theme Surface
+        title = {
+            Text(
+                "Edit Profile",
+                color = MaterialTheme.colorScheme.onSurface // Theme Text
+            )
+        },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant) // Theme Variant
+                        .clickable(enabled = !isLoading) { launcher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (imageUri != null) {
+                        AsyncImage(
+                            model = imageUri, contentDescription = null,
+                            contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()
+                        )
+                    } else if (!currentImageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = currentImageUrl, contentDescription = null,
+                            contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Edit,
+                            null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant // Theme Icon
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = name, onValueChange = { name = it },
+                    label = { Text("Full Name") },
+                    singleLine = true,
+                    enabled = !isLoading,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val base64Image = imageUri?.let { uri ->
+                        try {
+                            val inputStream = context.contentResolver.openInputStream(uri)
+                            val bytes = inputStream?.readBytes()
+                            inputStream?.close()
+                            if (bytes != null) Base64.encodeToString(bytes, Base64.DEFAULT) else null
+                        } catch (e: Exception) { null }
+                    }
+                    onSave(name, base64Image)
+                },
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                } else {
+                    Text("Save")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isLoading,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+fun ChangePasswordDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit
+) {
+    var oldPass by remember { mutableStateOf("") }
+    var newPass by remember { mutableStateOf("") }
+    var confirmPass by remember { mutableStateOf("") }
+
+    var oldVisible by remember { mutableStateOf(false) }
+    var newVisible by remember { mutableStateOf(false) }
+    var confirmVisible by remember { mutableStateOf(false) }
+
+    var error by remember { mutableStateOf<String?>(null) }
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Change Password", color = MaterialTheme.colorScheme.onSurface) },
+        text = {
+            Column {
+                // Old Password
+                OutlinedTextField(
+                    value = oldPass, onValueChange = { oldPass = it },
+                    label = { Text("Old Password") }, singleLine = true,
+                    visualTransformation = if (oldVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    colors = textFieldColors,
+                    trailingIcon = {
+                        IconButton(onClick = { oldVisible = !oldVisible }) {
+                            Icon(
+                                if (oldVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                "Toggle",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // New Password
+                OutlinedTextField(
+                    value = newPass, onValueChange = { newPass = it },
+                    label = { Text("New Password") }, singleLine = true,
+                    visualTransformation = if (newVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    colors = textFieldColors,
+                    trailingIcon = {
+                        IconButton(onClick = { newVisible = !newVisible }) {
+                            Icon(
+                                if (newVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                "Toggle",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Confirm Password
+                OutlinedTextField(
+                    value = confirmPass, onValueChange = { confirmPass = it },
+                    label = { Text("Confirm New Password") }, singleLine = true,
+                    visualTransformation = if (confirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    isError = error != null,
+                    colors = textFieldColors,
+                    trailingIcon = {
+                        IconButton(onClick = { confirmVisible = !confirmVisible }) {
+                            Icon(
+                                if (confirmVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                "Toggle",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                )
+
+                if (error != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (newPass != confirmPass) error = "Passwords do not match"
+                    else if (newPass.length < 6) error = "Password must be at least 6 characters"
+                    else onConfirm(oldPass, newPass)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) { Text("Update") }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+fun ThemeSelectionDialog(currentTheme: String, onThemeSelected: (String) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Choose Theme", color = MaterialTheme.colorScheme.onSurface) },
+        text = {
+            Column {
+                ThemeOption("System Default", "system", currentTheme, onThemeSelected)
+                ThemeOption("Light", "light", currentTheme, onThemeSelected)
+                ThemeOption("Dark", "dark", currentTheme, onThemeSelected)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+fun ThemeOption(text: String, value: String, currentTheme: String, onSelect: (String) -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .selectable(selected = (text == currentTheme), onClick = { onSelect(value) }, role = Role.RadioButton)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = (value == currentTheme),
+            onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = MaterialTheme.colorScheme.primary,
+                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        )
+        Spacer(Modifier.width(16.dp))
+        Text(text, color = MaterialTheme.colorScheme.onSurface)
     }
 }

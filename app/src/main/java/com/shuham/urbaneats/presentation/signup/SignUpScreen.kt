@@ -1,10 +1,12 @@
 package com.shuham.urbaneats.presentation.signup
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +68,7 @@ fun SignUpRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
     state: SignUpState,
@@ -76,7 +80,7 @@ fun SignUpScreen(
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
 
         // 1. Hero Image
         AsyncImage(
@@ -89,31 +93,33 @@ fun SignUpScreen(
                 .align(Alignment.TopCenter)
         )
 
-        // Back Button (Optional but good for UX)
+        // Back Button
         IconButton(
             onClick = onLoginClick,
             modifier = Modifier
                 .padding(top = 48.dp, start = 16.dp)
                 .align(Alignment.TopStart)
-                .background(Color.Black.copy(alpha = 0.3f), androidx.compose.foundation.shape.CircleShape)
+                .background(Color.Black.copy(alpha = 0.3f), CircleShape)
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
         }
 
-        // 2. The White Sheet
+        // 2. The Content Sheet
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 280.dp), // Higher overlap to fit more fields
+                .padding(top = 280.dp), // High overlap
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface, // Theme Surface
             shadowElevation = 16.dp
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                    .padding(horizontal = 24.dp, vertical = 32.dp)
+                    .navigationBarsPadding() // FIX: Prevent overlap with nav bar
+                    .imePadding(), // FIX: Move up when keyboard opens
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
@@ -121,35 +127,47 @@ fun SignUpScreen(
                     text = "Create Account",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A),
+                    color = MaterialTheme.colorScheme.onSurface, // Theme Text
                     modifier = Modifier.align(Alignment.Start)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Full Name
-                Text("Full Name", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp))
+                Text(
+                    "Full Name",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
+                )
                 TextField(
                     value = state.name,
                     onValueChange = onNameChange,
-                    placeholder = { Text("Enter your full name", color = Color.Gray) },
+                    placeholder = { Text("Enter your full name", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = inputColors(),
+                    colors = themeInputColors(),
                     singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Email
-                Text("Email", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp))
+                Text(
+                    "Email",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
+                )
                 TextField(
                     value = state.email,
                     onValueChange = onEmailChange,
-                    placeholder = { Text("Enter your email", color = Color.Gray) },
+                    placeholder = { Text("Enter your email", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = inputColors(),
+                    colors = themeInputColors(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
@@ -157,14 +175,20 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Password
-                Text("Password", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp))
+                Text(
+                    "Password",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
+                )
                 TextField(
                     value = state.password,
                     onValueChange = onPasswordChange,
-                    placeholder = { Text("Enter your password", color = Color.Gray) },
+                    placeholder = { Text("Enter your password", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = inputColors(),
+                    colors = themeInputColors(),
                     singleLine = true,
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -172,7 +196,7 @@ fun SignUpScreen(
                             Icon(
                                 imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = "Toggle",
-                                tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     },
@@ -181,7 +205,12 @@ fun SignUpScreen(
 
                 if (state.error != null) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(state.error, color = Color.Red, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.Start))
+                    Text(
+                        text = state.error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -190,12 +219,17 @@ fun SignUpScreen(
                 Button(
                     onClick = onRegisterClick,
                     enabled = !state.isLoading,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
                     if (state.isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                     } else {
                         Text("Sign Up", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
@@ -203,7 +237,7 @@ fun SignUpScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Social Login Reuse
+                // Social Login
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     SocialLoginButton(iconResId = R.drawable.ic_google, onClick = {})
                     SocialLoginButton(iconResId = R.drawable.ic_apple, onClick = {})
@@ -215,7 +249,7 @@ fun SignUpScreen(
                 // Footer
                 val annotatedString = buildAnnotatedString {
                     append("Already have an account? ")
-                    withStyle(style = SpanStyle(color = Color(0xFFE65100), fontWeight = FontWeight.Bold)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
                         append("Login")
                     }
                 }
@@ -223,18 +257,21 @@ fun SignUpScreen(
                     text = annotatedString,
                     modifier = Modifier.clickable { onLoginClick() },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                // Extra space for scrolling comfort
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
 }
 
 @Composable
-fun inputColors() = TextFieldDefaults.colors(
-    focusedContainerColor = Color(0xFFF5F5F5),
-    unfocusedContainerColor = Color(0xFFF5F5F5),
+fun themeInputColors() = TextFieldDefaults.colors(
+    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
     focusedIndicatorColor = Color.Transparent,
     unfocusedIndicatorColor = Color.Transparent,
-    errorContainerColor = Color(0xFFFDE7E9)
+    errorContainerColor = MaterialTheme.colorScheme.errorContainer
 )

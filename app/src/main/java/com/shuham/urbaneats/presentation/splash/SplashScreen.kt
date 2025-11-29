@@ -48,16 +48,16 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary), // Solid Brand Orange
+            .background(MaterialTheme.colorScheme.primary), // Theme Primary (Brand Orange)
         contentAlignment = Alignment.Center
     ) {
         // Center Logo Section
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
-                imageVector = Icons.Rounded.Fastfood, // Placeholder for Fork/Spoon
+                imageVector = Icons.Rounded.Fastfood,
                 contentDescription = "Logo",
                 modifier = Modifier.size(80.dp),
-                tint = Color.White
+                tint = MaterialTheme.colorScheme.onPrimary // Theme OnPrimary (White/Contrast)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -65,7 +65,7 @@ fun SplashScreen() {
             Text(
                 text = "Urbaneats",
                 style = MaterialTheme.typography.displayMedium,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary, // Theme OnPrimary
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-1).sp
             )
@@ -79,7 +79,7 @@ fun SplashScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CircularProgressIndicator(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary, // Theme OnPrimary
                 modifier = Modifier.size(32.dp),
                 strokeWidth = 3.dp
             )
@@ -89,7 +89,7 @@ fun SplashScreen() {
             Text(
                 text = "Deliciousness delivered.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.8f)
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) // Theme OnPrimary with opacity
             )
         }
     }

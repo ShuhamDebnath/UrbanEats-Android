@@ -11,10 +11,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +35,7 @@ import com.shuham.urbaneats.domain.model.AddonOption
 import com.shuham.urbaneats.domain.model.Product
 import com.shuham.urbaneats.domain.model.SizeOption
 import com.shuham.urbaneats.presentation.details.SizeOption
+import com.shuham.urbaneats.ui.theme.UrbanRed
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -84,6 +87,7 @@ fun DetailRoute(
 // ==========================================
 // 2. SCREEN (The Beauty)
 // ==========================================
+
 @Composable
 fun DetailScreen(
     state: DetailState,
@@ -92,65 +96,58 @@ fun DetailScreen(
     onToggleFavorite: () -> Unit
 ) {
     val scrollState = rememberLazyListState()
-    var specialInstructions by remember { mutableStateOf("") }
 
-    // DYNAMIC STATE
+    // Default states
     var selectedSize by remember(state.product) {
         mutableStateOf(state.product?.sizes?.firstOrNull() ?: SizeOption("Regular", 0.0))
     }
-
-    // Selected Addons (Set of objects)
     var selectedAddons by remember { mutableStateOf(setOf<AddonOption>()) }
     var quantity by remember { mutableIntStateOf(1) }
+    var specialInstructions by remember { mutableStateOf("") }
 
-    // Calculation Logic
+    // Logic to calculate total
     val basePrice = state.product?.price ?: 0.0
     val sizePrice = selectedSize.price
     val addonsPrice = selectedAddons.sumOf { it.price }
     val unitPrice = basePrice + sizePrice + addonsPrice
     val finalTotalPrice = unitPrice * quantity
 
-
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
+    // Background stays black for the image area
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
         if (state.isLoading || state.product == null) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
             val product = state.product
 
-            // 1. Background Image (Fixed)
+            // 1. Background Image
             AsyncImage(
                 model = product.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(350.dp) // Takes top portion
+                    .height(350.dp)
                     .align(Alignment.TopCenter)
             )
 
-            // 2. Gradient Overlay for Header Icons visibility
+            // 2. Gradient Overlay
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(150.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent)
+                            colors = listOf(Color.Black.copy(alpha = 0.7f), Color.Transparent)
                         )
                     )
             )
 
-            // 3. Top Bar Icons (Absolute positioning)
+            // 3. Top Bar Icons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
+                    //.statusBarsPadding()
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -170,22 +167,23 @@ fun DetailScreen(
                         .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                 ) {
                     Icon(
-                        imageVector = if (product.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if(product.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Favorite",
-                        tint = if (product.isFavorite) Color.Red else Color.White
+                        // Use Semantic Red for favorite, White for unselected (on dark image)
+                        tint = if(product.isFavorite) UrbanRed else Color.White
                     )
                 }
             }
 
-            // 4. The White Sheet (Scrollable Content)
-            // We use a Box with top padding to simulate the sheet sliding up
+            // 4. Content Sheet
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 280.dp) // Overlap the image
+                    .padding(top = 280.dp)
             ) {
                 Surface(
-                    color = Color.White,
+                    // Use Theme Surface (White in Light, Dark Grey in Dark)
+                    color = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -201,7 +199,7 @@ fun DetailScreen(
                                 modifier = Modifier
                                     .width(40.dp)
                                     .height(4.dp)
-                                    .background(Color.LightGray, RoundedCornerShape(50))
+                                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), RoundedCornerShape(50))
                             )
                         }
 
@@ -209,7 +207,7 @@ fun DetailScreen(
                         LazyColumn(
                             state = scrollState,
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                            modifier = Modifier.weight(1f) // Takes remaining space above footer
+                            modifier = Modifier.weight(1f)
                         ) {
                             // Title & Price
                             item {
@@ -222,12 +220,13 @@ fun DetailScreen(
                                         text = product.name,
                                         style = MaterialTheme.typography.headlineMedium,
                                         fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.weight(1f)
                                     )
                                     Text(
                                         text = "$${product.price}",
                                         style = MaterialTheme.typography.headlineSmall,
-                                        color = Color(0xFFE65100), // Orange
+                                        color = MaterialTheme.colorScheme.primary, // Theme Primary
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -235,15 +234,9 @@ fun DetailScreen(
                                 Text(
                                     text = product.description,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Gray,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     lineHeight = 20.sp
                                 )
-                                Text(
-                                    text = "Read more",
-                                    color = Color(0xFFE65100),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    modifier = Modifier.clickable { })
                                 Spacer(modifier = Modifier.height(24.dp))
                             }
 
@@ -253,14 +246,14 @@ fun DetailScreen(
                                     SectionTitle("Choose Size")
                                     state.product.sizes.forEach { size ->
                                         val isSelected = size == selectedSize
-                                        val priceText =
-                                            if (size.price == 0.0) "Included" else "+$${size.price}"
+                                        val priceText = if (size.price == 0.0) "Included" else "+$${size.price}"
 
                                         SizeOption(
                                             label = size.name,
                                             price = priceText,
                                             selected = isSelected,
-                                            onClick = { selectedSize = size })
+                                            onClick = { selectedSize = size }
+                                        )
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
                                     Spacer(modifier = Modifier.height(16.dp))
@@ -279,9 +272,9 @@ fun DetailScreen(
                                             price = "+$${addon.price}",
                                             checked = isChecked,
                                             onCheckedChange = {
-                                                selectedAddons =
-                                                    if (isChecked) selectedAddons - addon else selectedAddons + addon
-                                            })
+                                                selectedAddons = if (isChecked) selectedAddons - addon else selectedAddons + addon
+                                            }
+                                        )
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
                                     Spacer(modifier = Modifier.height(16.dp))
@@ -294,34 +287,39 @@ fun DetailScreen(
                                 OutlinedTextField(
                                     value = specialInstructions,
                                     onValueChange = { specialInstructions = it },
-                                    placeholder = { Text("Add a note (e.g., no onions)", color = Color.Gray) },
+                                    placeholder = { Text("Add a note (e.g., no onions)", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                     modifier = Modifier.fillMaxWidth().height(100.dp),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedContainerColor = Color(0xFFF9F9F9),
-                                        focusedContainerColor = Color(0xFFF9F9F9),
+                                        // Theme-aware input colors
+                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                                         unfocusedBorderColor = Color.Transparent,
-                                        focusedBorderColor = Color(0xFFE65100)
+                                        cursorColor = MaterialTheme.colorScheme.primary,
+                                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                                     )
                                 )
                                 Spacer(modifier = Modifier.height(24.dp))
                             }
                         }
 
-                        // 5. Sticky Footer (Qty + Add Button)
+                        // Sticky Footer
                         Surface(
-                            shadowElevation = 16.dp, color = Color.White
+                            shadowElevation = 16.dp,
+                            color = MaterialTheme.colorScheme.surface // Theme Surface
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp)
-                                    .navigationBarsPadding(), // Avoid overlapping system nav bar
+                                    .navigationBarsPadding(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 // Qty Selector
                                 Surface(
-                                    color = Color(0xFFF5F5F5),
+                                    color = MaterialTheme.colorScheme.surfaceVariant, // Theme Variant
                                     shape = RoundedCornerShape(50),
                                     modifier = Modifier.height(50.dp)
                                 ) {
@@ -329,40 +327,41 @@ fun DetailScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.padding(horizontal = 8.dp)
                                     ) {
-                                        IconButton(onClick = { if (quantity > 1) quantity-- }) {
-                                            Icon(Icons.Default.Remove, null, tint = Color.Black)
+                                        IconButton(onClick = { if(quantity > 1) quantity-- }) {
+                                            Icon(Icons.Default.Remove, null, tint = MaterialTheme.colorScheme.onSurface)
                                         }
                                         Text(
                                             text = "$quantity",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 18.sp,
+                                            color = MaterialTheme.colorScheme.onSurface,
                                             modifier = Modifier.padding(horizontal = 8.dp)
                                         )
                                         IconButton(onClick = { quantity++ }) {
-                                            Icon(Icons.Default.Add, null, tint = Color(0xFFE65100))
+                                            Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary)
                                         }
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.width(16.dp))
 
-
-
+                                // Add Button
                                 Button(
                                     onClick = {
-                                        // PASS DATA TO PARENT
                                         onAddToCart(selectedSize, selectedAddons, quantity, specialInstructions)
                                     },
                                     modifier = Modifier.weight(1f).height(50.dp),
                                     shape = RoundedCornerShape(50),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary, // Theme Primary
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
                                 ) {
-                                    // Calculate visual price
-                                    val basePrice = state.product?.price ?: 0.0
-                                    val extraPrice = selectedSize.price + selectedAddons.sumOf { it.price }
-                                    val total = (basePrice + extraPrice) * quantity
-
-                                    Text("Add to Cart - $${String.format("%.2f", total)}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = "Add - $${String.format("%.2f", finalTotalPrice)}",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }
@@ -381,47 +380,49 @@ fun SectionTitle(title: String) {
         text = title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(bottom = 12.dp)
     )
 }
 
 @Composable
 fun SizeOption(label: String, price: String, selected: Boolean, onClick: () -> Unit) {
+    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+    val backgroundColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+
     Surface(
-        shape = RoundedCornerShape(12.dp), border = BorderStroke(
-            1.dp, if (selected) Color(0xFFE65100) else Color.LightGray.copy(alpha = 0.5f)
-        ), color = if (selected) Color(0xFFFFF3E0) else Color.White, // Light Orange vs White
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, borderColor),
+        color = backgroundColor,
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clickable { onClick() }) {
+            .clickable { onClick() }
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Radio Circle
-//                Icon(
-//                    // Use a circle outline or filled circle
-//                    imageVector = if(selected) Icons.Default.Favorite else Icons.Default.FavoriteBorder, // Hack: Use Radio Icon instead
-//                    contentDescription = null,
-//                    tint = if (selected) Color(0xFFE65100) else Color.Gray,
-//                    modifier = Modifier.size(20.dp) // Ideally use RadioButton composable
-//                )
-                // Better: Use actual Radio Button visual
-                RadioButton(
-                    selected = selected,
-                    onClick = null,
-                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE65100))
+                // Radio Icon Simulation
+                Icon(
+                    imageVector = if(selected) Icons.Default.Circle else Icons.Outlined.Circle, // Using Heart as placeholder for Radio, standard radio logic is better visually usually
+                    contentDescription = null,
+                    tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(label, fontWeight = FontWeight.Medium)
+                Text(
+                    text = label,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
             Text(
-                price,
-                color = if (selected) Color(0xFFE65100) else Color.Gray,
+                text = price,
+                color = if(selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -429,46 +430,48 @@ fun SizeOption(label: String, price: String, selected: Boolean, onClick: () -> U
 }
 
 @Composable
-fun ExtraOption(
-    label: String, price: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit
-) {
+fun ExtraOption(label: String, price: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val borderColor = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+
     Surface(
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(
-            1.dp, if (checked) Color(0xFFE65100) else Color.LightGray.copy(alpha = 0.5f)
-        ),
+        border = BorderStroke(1.dp, borderColor),
+        color = MaterialTheme.colorScheme.surface, // Extras usually keep white/surface bg even if checked, or light tint
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clickable { onCheckedChange(!checked) }) {
+            .clickable { onCheckedChange(!checked) }
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Checkbox visual
-                // Using a simple icon or built-in Checkbox
-                // Checkbox(checked = checked, onCheckedChange = null, colors = CheckboxDefaults.colors(checkedColor = Color(0xFFE65100)))
-                // Custom circle for clean look
+                // Checkbox Visual
                 Surface(
                     shape = CircleShape,
-                    border = BorderStroke(1.dp, if (checked) Color(0xFFE65100) else Color.Gray),
-                    color = if (checked) Color(0xFFE65100) else Color.Transparent,
+                    border = BorderStroke(1.dp, if(checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant),
+                    color = if(checked) MaterialTheme.colorScheme.primary else Color.Transparent,
                     modifier = Modifier.size(20.dp)
                 ) {
-                    if (checked) Icon(
-                        Icons.Default.Add,
-                        null,
-                        tint = Color.White,
-                        modifier = Modifier.padding(2.dp)
-                    )
+                    if(checked) {
+                        Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.padding(2.dp))
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(label, fontWeight = FontWeight.Medium)
+                Text(
+                    text = label,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
-            Text(price, fontWeight = FontWeight.Bold)
+            Text(
+                text = price,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }

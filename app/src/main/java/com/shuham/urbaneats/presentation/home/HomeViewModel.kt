@@ -115,6 +115,7 @@ class HomeViewModel(
         viewModelScope.launch {
             val result = getCategoriesUseCase()
             if (result is NetworkResult.Success) {
+                Log.d("TAG", "loadCategories: ")
                 val allCat = Category("all", "All", "")
                 val list = listOf(allCat) + (result.data ?: emptyList())
                 _state.update { it.copy(categories = list) }

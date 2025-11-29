@@ -42,6 +42,7 @@ fun OrderFailureRoute(
 }
 
 // 2. SCREEN
+// 2. SCREEN
 @Composable
 fun OrderFailureScreen(
     reason: String,
@@ -49,7 +50,7 @@ fun OrderFailureScreen(
     onBackToCartClick: () -> Unit
 ) {
     Scaffold(
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = MaterialTheme.colorScheme.background // Theme Background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -66,7 +67,8 @@ fun OrderFailureScreen(
                 modifier = Modifier
                     .size(140.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFFFEBEE)), // Very Light Red
+                    // Outer Circle: Light Red in Light Mode, Muted Red in Dark Mode
+                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)),
                 contentAlignment = Alignment.Center
             ) {
                 // Inner Circle
@@ -74,14 +76,15 @@ fun OrderFailureScreen(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFFFCDD2)), // Light Red
+                        // Inner Circle: Stronger Error Container color
+                        .background(MaterialTheme.colorScheme.errorContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Error, // X Icon
+                        imageVector = Icons.Default.Close, // X Icon
                         contentDescription = "Failed",
-                        modifier = Modifier.size(70.dp),
-                        tint = Color(0xFFD32F2F) // Dark Red
+                        modifier = Modifier.size(50.dp),
+                        tint = MaterialTheme.colorScheme.error // Theme Error Color (Red)
                     )
                 }
             }
@@ -92,7 +95,7 @@ fun OrderFailureScreen(
                 text = "Order Failed",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground // Theme Text
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -100,7 +103,7 @@ fun OrderFailureScreen(
             Text(
                 text = "Something went wrong with your order.\nReason: $reason",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Secondary Text
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
             )
@@ -112,16 +115,19 @@ fun OrderFailureScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Primary Action: Retry
+                // Primary Action: Retry (Red Button)
                 Button(
                     onClick = onRetryClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)) // Red Button
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error, // Red Button
+                        contentColor = MaterialTheme.colorScheme.onError // Text on Red
+                    )
                 ) {
-                    Text("Retry", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Retry", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
 
                 // Secondary Action: Back to Cart
@@ -131,7 +137,12 @@ fun OrderFailureScreen(
                         .fillMaxWidth()
                         .height(56.dp)
                 ) {
-                    Text("Back to Cart", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Text(
+                        text = "Back to Cart",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant // Theme Secondary Text
+                    )
                 }
             }
 

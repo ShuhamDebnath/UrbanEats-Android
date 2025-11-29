@@ -28,7 +28,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun AddressListRoute(
     onBackClick: () -> Unit,
-    onAddressSelected: (Address) -> Unit, // Callback for Checkout
+    //onAddressSelected: (Address) -> Unit, // Callback for Checkout
     viewModel: AddressViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -57,14 +57,35 @@ fun AddressListScreen(
     onDeleteAddress: (Address) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            snackbarHostState.showSnackbar("Error: ${state.error}")
+        }
+    }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background, // Theme Background
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("My Addresses", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "My Addresses",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground // Theme Text
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background // Theme Background
+                ),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            "Back",
+                            tint = MaterialTheme.colorScheme.onBackground // Theme Icon
+                        )
                     }
                 }
             )
@@ -72,23 +93,25 @@ fun AddressListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showDialog = true },
-                containerColor = Color(0xFFE65100),
-                contentColor = Color.White
+                containerColor = MaterialTheme.colorScheme.primary, // Theme Primary
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Icon(Icons.Default.Add, "Add Address")
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Box(modifier = Modifier
-            .padding(innerPadding)
-            .fillMaxSize()) {
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
+                )
             } else if (state.addresses.isEmpty()) {
                 Text(
                     "No addresses found",
                     modifier = Modifier.align(Alignment.Center),
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant // Theme Secondary Text
                 )
             } else {
                 LazyColumn(
@@ -97,10 +120,11 @@ fun AddressListScreen(
                 ) {
                     items(state.addresses) { address ->
                         AddressCard(
-                            address,
-                            isSelected = address.id == state.selectedId,
+                            address = address,
+                            isSelected = state.selectedId == address.id,
                             onClick = { onSelectAddress(address) },
-                            onDelete = { onDeleteAddress(address) })
+                            onDelete = { onDeleteAddress(address) }
+                        )
                     }
                 }
             }
@@ -125,38 +149,49 @@ fun AddressCard(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    // Dynamic Colors
+    val containerColor = if(isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+    val borderColor = if(isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFFFFF3E0) else Color.White // Highlight selected
-        ),
-        border = if (isSelected) BorderStroke(1.dp, Color(0xFFE65100)) else null,
-        elevation = CardDefaults.cardElevation(2.dp)
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(if(isSelected) 0.dp else 2.dp)
     ) {
         Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                 Icon(
-                    imageVector = if (address.label == "Home") Icons.Default.Home else Icons.Default.LocationOn,
+                    imageVector = if(address.label.equals("Home", true)) Icons.Default.Home else Icons.Default.Work,
                     contentDescription = null,
-                    tint = Color(0xFFE65100)
+                    tint = MaterialTheme.colorScheme.primary // Theme Primary
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text(address.label, fontWeight = FontWeight.Bold)
-                    Text(address.fullAddress, color = Color.Gray, fontSize = 14.sp)
+                    Text(
+                        address.label,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface // Theme Text
+                    )
+                    Text(
+                        address.fullAddress,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Secondary Text
+                        fontSize = 14.sp
+                    )
                 }
             }
 
-            // Delete Button
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, "Delete", tint = Color.Gray)
+                Icon(
+                    Icons.Default.Delete,
+                    "Delete",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant // Theme Icon
+                )
             }
         }
     }
@@ -176,7 +211,13 @@ fun AddAddressDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit)
                     value = label,
                     onValueChange = { label = it },
                     label = { Text("Label (e.g., Home, Work)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
@@ -184,18 +225,32 @@ fun AddAddressDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit)
                     onValueChange = { address = it },
                     label = { Text("Full Address") },
                     modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3
+                    maxLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             }
         },
         confirmButton = {
             Button(
-                onClick = { if (address.isNotBlank()) onConfirm(label, address) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+                onClick = { if(address.isNotBlank()) onConfirm(label, address) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) { Text("Save") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) { Text("Cancel") }
+        },
+        containerColor = MaterialTheme.colorScheme.surface, // Theme Surface for Dialog
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }

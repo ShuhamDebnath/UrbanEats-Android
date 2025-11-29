@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.shuham.urbaneats.ui.theme.UrbanGreen
 
 // 1. ROUTE
 @Composable
@@ -48,22 +50,20 @@ fun OrderSuccessScreen(
     onTrackClick: () -> Unit,
     onHomeClick: () -> Unit
 ) {
-    // Animation State: Starts at 0 (invisible/tiny)
     val scale = remember { Animatable(0f) }
 
-    // Trigger Animation on Entry
     LaunchedEffect(Unit) {
         scale.animateTo(
             targetValue = 1f,
             animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy, // Bouncy effect
-                stiffness = Spring.StiffnessLow // Slower, more visible bounce
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
             )
         )
     }
 
     Scaffold(
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = MaterialTheme.colorScheme.background // Theme Background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -72,17 +72,16 @@ fun OrderSuccessScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            // Push content to center
             Spacer(modifier = Modifier.weight(1f))
 
-            // Success Icon Container (Now Animated)
+            // Success Icon Container
             Box(
                 modifier = Modifier
-                    .scale(scale.value) // <--- APPLY ANIMATION HERE
+                    .scale(scale.value)
                     .size(140.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFFBE9E7)), // Very Light Orange/Peach ring
+                    // Outer ring: Surface Variant (Light Gray / Dark Gray)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 // Inner Circle
@@ -90,14 +89,14 @@ fun OrderSuccessScreen(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFFFCCBC)), // Light Orange
+                        .background(MaterialTheme.colorScheme.primary), // Theme Surface
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Success",
                         modifier = Modifier.size(50.dp),
-                        tint = Color(0xFFE65100) // Dark Orange Check
+                        tint = UrbanGreen // Semantic Green (Always Green)
                     )
                 }
             }
@@ -108,7 +107,7 @@ fun OrderSuccessScreen(
                 text = "Order Placed!",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground // Theme Text
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -116,12 +115,11 @@ fun OrderSuccessScreen(
             Text(
                 text = "You're about to eat well.\nOrder ID #123456",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Secondary Text
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
             )
 
-            // Push Button to bottom
             Spacer(modifier = Modifier.weight(1f))
 
             // Buttons Section
@@ -129,26 +127,34 @@ fun OrderSuccessScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Primary Action: Track
+                // Primary Action
                 Button(
                     onClick = onTrackClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    shape = RoundedCornerShape(50), // Pill shape
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary, // Theme Orange
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
-                    Text("Track Order", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Track Order", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
 
-                // Secondary Action: Home (Text Button for clean look)
-                TextButton(
+                // Secondary Action
+                OutlinedButton(
                     onClick = onHomeClick,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(50),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), // Theme Outline
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 ) {
-                    Text("Back to Home", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Text("Back to Home", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
 

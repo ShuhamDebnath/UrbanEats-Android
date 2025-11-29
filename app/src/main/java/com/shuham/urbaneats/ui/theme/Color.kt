@@ -17,9 +17,10 @@ val UrbanOrangeLight = Color(0xFFFBAF85)  // Accents / Containers (Light Mode)
 val UrbanOrangeDark = Color(0xFFFF8A65)   // Lighter Orange for Dark Mode visibility
 
 // --- SEMANTIC COLORS (Status & Icons) ---
-val UrbanGold = Color(0xFFFFB300)         // Ratings/Stars
-val UrbanGreen = Color(0xFF4CAF50)        // Success/Delivered
-val UrbanRed = Color(0xFFD32F2F)          // Error/Favorites
+val UrbanGold = Color(0xFFFFB300)         // For Stars / Ratings
+val UrbanGreen = Color(0xFF4CAF50)        // For Success / Delivered
+val UrbanRed = Color(0xFFD32F2F)          // For Error / Favorites
+val UrbanLightGray = Color(0xFFF5F5F5)    // For Backgrounds / Chips in Light Mode
 val UrbanError = Color(0xFFD32F2F)
 
 // --- LIGHT THEME PALETTE ---

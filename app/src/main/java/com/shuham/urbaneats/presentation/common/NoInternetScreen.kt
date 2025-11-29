@@ -1,19 +1,32 @@
 package com.shuham.urbaneats.presentation.common
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.WifiOff
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -22,7 +35,7 @@ fun NoInternetScreen(
     onRetry: () -> Unit
 ) {
     Scaffold(
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = MaterialTheme.colorScheme.background // Theme Background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -38,7 +51,8 @@ fun NoInternetScreen(
                 modifier = Modifier
                     .size(140.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFECEFF1)), // Light Blue-Gray
+                    // Outer Circle: Surface Variant (Light Gray in Light, Muted Gray in Dark)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 // Inner Circle
@@ -46,14 +60,15 @@ fun NoInternetScreen(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFCFD8DC)), // Darker Blue-Gray
+                        // Inner Circle: Theme Surface or slightly distinct color
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.WifiOff,
                         contentDescription = "No Internet",
                         modifier = Modifier.size(50.dp),
-                        tint = Color(0xFF455A64) // Slate Gray
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant // Theme Icon Color
                     )
                 }
             }
@@ -64,7 +79,7 @@ fun NoInternetScreen(
                 text = "No Internet Connection",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground, // Theme Text
                 textAlign = TextAlign.Center
             )
 
@@ -73,7 +88,7 @@ fun NoInternetScreen(
             Text(
                 text = "Please check your internet settings and try again.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // Theme Secondary Text
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
             )
@@ -87,10 +102,20 @@ fun NoInternetScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100)) // Brand Orange
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary, // Theme Orange
+                    contentColor = MaterialTheme.colorScheme.onPrimary // Text on Orange
+                )
             ) {
-                Text("Try Again", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Try Again", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun NoInternetScreenPrev() {
+    NoInternetScreen({})
+
 }

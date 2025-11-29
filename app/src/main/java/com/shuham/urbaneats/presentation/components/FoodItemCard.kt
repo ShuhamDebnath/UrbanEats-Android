@@ -21,11 +21,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.shuham.urbaneats.domain.model.Product
+import com.shuham.urbaneats.ui.theme.UrbanGold
+import com.shuham.urbaneats.ui.theme.UrbanRed
 
 @Composable
 fun FoodItemCard(
     foodProduct: Product,
-    onAddClick: () -> Unit,
     onItemClick: () -> Unit,
     onFavoriteClick: () -> Unit // <--- NEW PARAMETER
 ) {
@@ -36,7 +37,12 @@ fun FoodItemCard(
         elevation = CardDefaults.cardElevation(0.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(24.dp), ambientColor = Color.Gray.copy(0.1f), spotColor = Color.Gray.copy(0.1f))
+            .shadow(
+                8.dp,
+                RoundedCornerShape(24.dp),
+                ambientColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), // Theme-aware shadow
+                spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f) // Theme-aware shadow
+            )
     ) {
         Column {
             // IMAGE CONTAINER
@@ -56,7 +62,7 @@ fun FoodItemCard(
                         .size(36.dp)
                         .clickable { onFavoriteClick() }, // <--- CLICK ACTION
                     shape = CircleShape,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.surface // Theme-aware
                 ) {
                     Icon(
                         // Toggle Icon based on state
@@ -64,7 +70,7 @@ fun FoodItemCard(
                         contentDescription = "Favorite",
                         modifier = Modifier.padding(8.dp),
                         // Toggle Color based on state
-                        tint = if (foodProduct.isFavorite) Color.Red else Color.Gray
+                        tint = if (foodProduct.isFavorite) UrbanRed else MaterialTheme.colorScheme.onSurfaceVariant // Theme-aware tint
                     )
                 }
 
@@ -83,14 +89,15 @@ fun FoodItemCard(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = Color(0xFFFFB300),
+                            tint = UrbanGold,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${foodProduct.rating}",
                             style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface // Theme-aware text
                         )
                     }
                 }
@@ -109,20 +116,21 @@ fun FoodItemCard(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface // Theme-aware text
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "25 mins • Free Delivery",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant // Theme-aware secondary text
                         )
                     }
                     Text(
                         text = "$${foodProduct.price}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary // Theme-aware primary color
                     )
                 }
             }

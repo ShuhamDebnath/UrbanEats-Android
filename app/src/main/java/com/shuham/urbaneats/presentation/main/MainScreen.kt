@@ -5,6 +5,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Search
@@ -65,11 +69,11 @@ import com.shuham.urbaneats.presentation.track_order.TrackOrderRoute
 
 // Define the Tab Structure
 
-sealed class BottomNavItem(val route: Any, val icon: ImageVector, val label: String) {
-    object Home : BottomNavItem(HomeRoute, Icons.Rounded.Home, "Home")
-    object Search : BottomNavItem(SearchRoute, Icons.Rounded.Search, "Search")
-    object Cart : BottomNavItem(CartRoute, Icons.Rounded.ShoppingCart, "Cart")
-    object Profile : BottomNavItem(ProfileRoute, Icons.Rounded.Person, "Profile")
+sealed class BottomNavItem(val route: Any, val selectedIcon: ImageVector, val unSelectedIcon: ImageVector, val label: String) {
+    object Home : BottomNavItem(HomeRoute, Icons.Rounded.Home, Icons.Outlined.Home, "Home")
+    object Search : BottomNavItem(SearchRoute, Icons.Rounded.Search,Icons.Outlined.Search, "Search")
+    object Cart : BottomNavItem(CartRoute, Icons.Rounded.ShoppingCart,Icons.Outlined.ShoppingCart, "Cart")
+    object Profile : BottomNavItem(ProfileRoute, Icons.Rounded.Person, Icons.Outlined.Person, "Profile")
 }
 
 @Composable
@@ -99,9 +103,9 @@ fun MainScreen(
             if (showBottomBar) {
                 // Clean White Navigation Bar
                 NavigationBar(
-                    containerColor = Color.White, // Explicit White for clean look
-                    tonalElevation = 8.dp,
-                    modifier = Modifier.shadow(8.dp) // Add shadow for separation
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.shadow(8.dp, spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                 ) {
                     topLevelRoutes.forEach { screen ->
                         val isSelected =
@@ -118,25 +122,27 @@ fun MainScreen(
                         )
 
                         NavigationBarItem(
+                            alwaysShowLabel = false,
                             icon = {
                                 Icon(
-                                    imageVector = screen.icon,
+                                    imageVector = if(isSelected) screen.selectedIcon else screen.unSelectedIcon,
                                     contentDescription = screen.label,
                                     modifier = Modifier.scale(scale) // Apply Animation
                                 )
                             },
                             label = {
-                                Text(
-                                    text = screen.label,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
+                                    Text(
+                                        text = screen.label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
                             },
                             selected = isSelected,
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary, // Orange
                                 selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                indicatorColor = Color.Transparent,
                                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant, // Gray
                                 unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                             ),
@@ -239,14 +245,14 @@ fun MainScreen(
             composable<AddressListRoute> {
                 AddressListRoute(
                     onBackClick = { navController.popBackStack() },
-                    onAddressSelected = { address ->
-                        // Pass result back to Checkout
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set("selected_address", address.fullAddress)
-
-                        navController.popBackStack()
-                    }
+//                    onAddressSelected = { address ->
+//                        // Pass result back to Checkout
+//                        navController.previousBackStackEntry
+//                            ?.savedStateHandle
+//                            ?.set("selected_address", address.fullAddress)
+//
+//                        navController.popBackStack()
+//                    }
                 )
             }
             // Help and Support
