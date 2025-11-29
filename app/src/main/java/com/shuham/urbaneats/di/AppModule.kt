@@ -29,8 +29,10 @@ import com.shuham.urbaneats.domain.usecase.cart.PlaceOrderUseCase
 import com.shuham.urbaneats.domain.usecase.cart.RemoveFromCartUseCase
 import com.shuham.urbaneats.domain.usecase.cart.UpdateCartQuantityUseCase
 import com.shuham.urbaneats.domain.usecase.deal.GetDailyDealsUseCase
+import com.shuham.urbaneats.domain.usecase.order.GetAllOrdersUseCase
 import com.shuham.urbaneats.domain.usecase.order.GetOrderDetailsUseCase
 import com.shuham.urbaneats.domain.usecase.order.GetOrdersUseCase
+import com.shuham.urbaneats.domain.usecase.order.UpdateOrderStatusUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetCategoriesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetFavoritesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetMenuUseCase
@@ -40,6 +42,7 @@ import com.shuham.urbaneats.domain.usecase.product.SearchProductsUseCase
 import com.shuham.urbaneats.domain.usecase.product.ToggleFavoriteUseCase
 import com.shuham.urbaneats.domain.usecase.validation.ValidateEmailUseCase
 import com.shuham.urbaneats.presentation.address.AddressViewModel
+import com.shuham.urbaneats.presentation.admin.screens.AdminOrdersViewModel
 import com.shuham.urbaneats.presentation.cart.CartViewModel
 import com.shuham.urbaneats.presentation.checkout.CheckoutViewModel
 import com.shuham.urbaneats.presentation.details.DetailViewModel
@@ -100,6 +103,8 @@ val appModule = module {
     factoryOf(::AddressViewModel)
     factoryOf(::GetOrderDetailsUseCase)
     factoryOf(::GetDailyDealsUseCase)
+    factoryOf(::UpdateOrderStatusUseCase)
+    factoryOf(::GetAllOrdersUseCase)
 
 
     // 4. ViewModel
@@ -116,6 +121,7 @@ val appModule = module {
     viewModelOf(::TrackOrderViewModel)
     viewModelOf(::SignUpViewModel)
     viewModelOf(::SettingsViewModel)
+    viewModelOf(::AdminOrdersViewModel)
 
     // 1. Provide Database Instance (Singleton)
     single {

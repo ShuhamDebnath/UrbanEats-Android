@@ -141,4 +141,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest) // Needed for UI tests
 
     testImplementation(libs.ktor.client.mock)
+
+    // Memory Leak Detection (Debug mode only)
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }

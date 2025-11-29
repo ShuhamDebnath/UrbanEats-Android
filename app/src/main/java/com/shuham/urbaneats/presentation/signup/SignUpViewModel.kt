@@ -69,7 +69,9 @@ class SignUpViewModel(
                             token = auth.token,
                             id = auth.user.id,
                             name = auth.user.name,
-                            email = auth.user.email
+                            email = auth.user.email,
+                            image = auth.user.profileImage,
+                            role = auth.user.role
                         )
                     }
                     _state.update { it.copy(isLoading = false) }

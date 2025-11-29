@@ -17,7 +17,8 @@ data class UserSession(
     val name: String?,
     val email: String?,
     val token: String?,
-    val profileImage: String?
+    val profileImage: String?,
+    val role: String?
 )
 class TokenManager(private val context: Context) {
 
@@ -27,19 +28,22 @@ class TokenManager(private val context: Context) {
         private val KEY_USER_NAME = stringPreferencesKey("user_name")
         private val KEY_USER_EMAIL = stringPreferencesKey("user_email")
         private val KEY_SELECTED_ADDRESS_ID = stringPreferencesKey("selected_address_id")
+
+        private val KEY_USER_ROLE = stringPreferencesKey("user_role")
         private val KEY_THEME = stringPreferencesKey("app_theme")
 
         private val KEY_USER_IMAGE = stringPreferencesKey("user_image")
     }
 
     // 1. Save User Session
-    suspend fun saveSession(token: String, id: String, name: String, email: String, image: String? = null) {
+    suspend fun saveSession(token: String, id: String, name: String, email: String, image: String? = null, role: String) {
         context.dataStore.edit { prefs ->
             prefs[KEY_TOKEN] = token
             prefs[KEY_USER_ID] = id
             prefs[KEY_USER_NAME] = name
             prefs[KEY_USER_EMAIL] = email
             if (image != null) prefs[KEY_USER_IMAGE] = image
+            prefs[KEY_USER_ROLE] = role
         }
     }
 
@@ -56,7 +60,8 @@ class TokenManager(private val context: Context) {
                 name = prefs[KEY_USER_NAME],
                 email = prefs[KEY_USER_EMAIL],
                 token = prefs[KEY_TOKEN],
-                profileImage = prefs[KEY_USER_IMAGE]
+                profileImage = prefs[KEY_USER_IMAGE],
+                role = prefs[KEY_USER_ROLE]
             )
         }
     }

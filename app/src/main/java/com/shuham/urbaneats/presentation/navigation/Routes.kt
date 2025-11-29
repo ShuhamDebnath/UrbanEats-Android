@@ -25,6 +25,9 @@ object ProfileRoute
 object SplashRoute
 
 @Serializable
+object AdminDashboardRoute
+
+@Serializable
 object SearchRoute
 
 @Serializable

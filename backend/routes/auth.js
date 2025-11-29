@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
         const savedUser = await user.save();
 
         // 4. Generate Token IMMEDIATELY (Critical for Auto-Login)
-        const token = jwt.sign({ _id: savedUser._id }, process.env.TOKEN_SECRET || 'secretKey123');
+        const token = jwt.sign({ _id: savedUser._id, role: savedUser.role }, process.env.TOKEN_SECRET || 'secretKey123');
 
         // 5. Return Token + User Info (Matches Android AuthResponse)
         res.header('auth-token', token).send({
@@ -33,7 +33,8 @@ router.post('/register', async (req, res) => {
                 id: savedUser._id,
                 name: savedUser.name,
                 email: savedUser.email,
-                profileImage: user.profileImage
+                profileImage: user.profileImage, // If you have this
+                role: savedUser.role // <--- SEND THIS
             }
         });
 
@@ -54,7 +55,7 @@ router.post('/login', async (req, res) => {
         if (!validPass) return res.status(400).send({ message: 'Invalid password' });
 
         // 3. Create and assign token
-        const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET || 'secretKey123');
+        const token = jwt.sign({ _id: user._id, role: user.role }, process.env.TOKEN_SECRET || 'secretKey123');
 
         // 4. Send back the token and user info
         res.header('auth-token', token).send({
@@ -63,7 +64,8 @@ router.post('/login', async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                profileImage: user.profileImage
+                profileImage: user.profileImage,
+                role: user.role // <--- SEND THIS
             }
         });
 

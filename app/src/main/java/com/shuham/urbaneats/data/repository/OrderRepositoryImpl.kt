@@ -9,7 +9,12 @@ import com.shuham.urbaneats.util.NetworkResult
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.utils.EmptyContent.contentType
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import kotlinx.coroutines.flow.first
 
 class OrderRepositoryImpl(
@@ -48,6 +53,44 @@ class OrderRepositoryImpl(
             else NetworkResult.Error("Order not found")
         } else {
             NetworkResult.Error(allOrdersResult.message)
+        }
+    }
+
+    override suspend fun getAllOrders(): NetworkResult<List<Order>> {
+        return try {
+            val response = client.get("api/orders/all")
+            if (response.status == HttpStatusCode.OK) {
+                val dtos = response.body<List<OrderResponseDto>>()
+                NetworkResult.Success(dtos.map { it.toDomain() })
+            } else {
+                NetworkResult.Error("Failed to fetch all orders")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message)
+        }
+    }
+
+    override suspend fun updateOrderStatus(orderId: String, newStatus: String): NetworkResult<Order> {
+        return try {
+            // Simple body with just the status
+            // Note: Create a simple DTO for this if you want strict typing,
+            // or just map of strings. Ktor needs a class or map.
+            val body = mapOf("status" to newStatus)
+
+            val response = client.put("api/orders/$orderId/status") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                val dto = response.body<OrderResponseDto>()
+                NetworkResult.Success(dto.toDomain())
+            } else {
+                NetworkResult.Error("Update failed")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message)
         }
     }
 }

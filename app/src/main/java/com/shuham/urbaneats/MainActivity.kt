@@ -13,24 +13,30 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.shuham.urbaneats.core.NetworkUtils
 import com.shuham.urbaneats.core.NotificationHelper
 import com.shuham.urbaneats.data.local.TokenManager
+import com.shuham.urbaneats.presentation.admin.AdminMainScreen
 import com.shuham.urbaneats.presentation.common.NoInternetScreen
 import com.shuham.urbaneats.presentation.login.LoginRoute
 import com.shuham.urbaneats.presentation.main.MainScreen
+import com.shuham.urbaneats.presentation.navigation.AdminDashboardRoute
 import com.shuham.urbaneats.presentation.navigation.LoginRoute
 import com.shuham.urbaneats.presentation.navigation.MainAppRoute
 import com.shuham.urbaneats.presentation.navigation.NoInternetRoute
 import com.shuham.urbaneats.presentation.navigation.SignUpRoute
 import com.shuham.urbaneats.presentation.navigation.SplashRoute
 import com.shuham.urbaneats.presentation.signup.SignUpRoute
-import com.shuham.urbaneats.presentation.splash.SplashRoute
+import com.shuham.urbaneats.presentation.splash.SplashDestination
+import com.shuham.urbaneats.presentation.splash.SplashScreen
+import com.shuham.urbaneats.presentation.splash.SplashViewModel
 import com.shuham.urbaneats.ui.theme.UrbanEatsTheme
-import org.koin.compose.KoinContext
+import org.koin.androidx.compose.koinViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -58,6 +64,8 @@ class MainActivity : ComponentActivity() {
                 else -> isSystemInDarkTheme() // Uses Android OS setting
             }
 
+
+
             UrbanEatsTheme(
                 darkTheme = useDarkTheme,
                 dynamicColor = false // Force our Brand Colors
@@ -75,27 +83,30 @@ class MainActivity : ComponentActivity() {
 
                     // 1. SPLASH
                     composable<SplashRoute> {
-                        SplashRoute(
-                            onNavigateToHome = {
-                                navController.navigate(MainAppRoute) {
-                                    popUpTo(SplashRoute) { inclusive = true }
-                                }
-                            },
-                            onNavigateToLogin = {
-                                navController.navigate(LoginRoute) {
-                                    popUpTo(SplashRoute) { inclusive = true }
-                                }
+                        // Inject SplashViewModel here
+                        val viewModel: SplashViewModel = koinViewModel()
+                        val destination by viewModel.destination.collectAsStateWithLifecycle()
+
+                        LaunchedEffect(destination) {
+                            when(destination) {
+                                is SplashDestination.Home -> navController.navigate(MainAppRoute) { popUpTo(SplashRoute) { inclusive = true } }
+                                is SplashDestination.Admin -> navController.navigate(AdminDashboardRoute) { popUpTo(SplashRoute) { inclusive = true } }
+                                is SplashDestination.Login -> navController.navigate(LoginRoute) { popUpTo(SplashRoute) { inclusive = true } }
+                                else -> {}
                             }
-                        )
+                        }
+
+                        SplashScreen()
                     }
 
                     // 2. LOGIN
                     composable<LoginRoute> {
                         LoginRoute(
-                            onNavigateToHome = {
-                                navController.navigate(MainAppRoute) {
-                                    popUpTo(LoginRoute) { inclusive = true }
-                                }
+                            onNavigateToHome = { // role -> // You need to update LoginRoute callback to accept role if you want instant redirect,
+                                // OR simpler: Login always goes to a routing check.
+                                // For now, let's assume Login saves to DataStore.
+                                // We can navigate to SplashRoute to re-evaluate role!
+                                navController.navigate(SplashRoute) { popUpTo(0) { inclusive = true } }
                             },
                             onNavigateToSignUp = {
                                 navController.navigate(SignUpRoute)
@@ -106,7 +117,7 @@ class MainActivity : ComponentActivity() {
                     // 3. SIGN UP
                     composable<SignUpRoute> {
                         // Ensure you created SignUpRoute in the previous step or import it
-                        com.shuham.urbaneats.presentation.signup.SignUpRoute(
+                        SignUpRoute(
                             onNavigateToHome = {
                                 navController.navigate(MainAppRoute) {
                                     popUpTo(LoginRoute) { inclusive = true }
@@ -130,7 +141,21 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 5. GLOBAL NO INTERNET SCREEN
+                    // 5. ADMIN DASHBOARD (NEW)
+                    composable<AdminDashboardRoute> {
+                        AdminMainScreen(
+                            onLogout = {
+                                navController.navigate(LoginRoute) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
+
+
+
+                    // 6. GLOBAL NO INTERNET SCREEN
                     composable<NoInternetRoute> {
                         NoInternetScreen(
                             onRetry = {

@@ -230,7 +230,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             ProfileMenuCard(
-                icon = Icons.Default.Help,
+                icon = Icons.AutoMirrored.Filled.Help,
                 iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
                 iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = "Help & Support",

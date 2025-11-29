@@ -76,7 +76,7 @@ fun AddressListScreen(
                         color = MaterialTheme.colorScheme.onBackground // Theme Text
                     )
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background // Theme Background
                 ),
                 navigationIcon = {

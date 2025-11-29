@@ -6,9 +6,14 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true, min: 6 },
     date: { type: Date, default: Date.now },
     profileImage: { type: String, default: "" }, // <--- NEW FIELD (Base64 String)
+    role: {
+            type: String,
+            enum: ['user', 'admin'],
+            default: 'user' // Everyone starts as a user
+    },
     addresses: [
         { label: String, fullAddress: String }
-    ]
+    ],
 });
 
 module.exports = mongoose.model('User', userSchema);

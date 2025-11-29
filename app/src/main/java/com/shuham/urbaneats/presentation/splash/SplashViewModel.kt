@@ -3,21 +3,26 @@ package com.shuham.urbaneats.presentation.splash
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shuham.urbaneats.data.local.TokenManager
+import com.shuham.urbaneats.data.local.UserSession
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+
+sealed interface SplashDestination {
+    data object Loading : SplashDestination
+    data object Login : SplashDestination
+    data object Home : SplashDestination
+    data object Admin : SplashDestination
+}
 
 class SplashViewModel(
     private val tokenManager: TokenManager
 ) : ViewModel() {
 
-    // We use a Boolean? (Tri-state):
-    // null = Loading
-    // true = Logged In
-    // false = Not Logged In
-    private val _isLoggedIn = MutableStateFlow<Boolean?>(null)
-    val isLoggedIn = _isLoggedIn.asStateFlow()
+    private val _destination = MutableStateFlow<SplashDestination>(SplashDestination.Loading)
+    val destination = _destination.asStateFlow()
 
     init {
         checkSession()
@@ -25,12 +30,17 @@ class SplashViewModel(
 
     private fun checkSession() {
         viewModelScope.launch {
-            // 1. Artificial Delay (Optional - keeps logo visible for branding)
             delay(1500)
+            val session = tokenManager.getUserSession().first()
 
-            // 2. Check Token
-            tokenManager.getToken().collect { token ->
-                _isLoggedIn.value = !token.isNullOrBlank()
+            if (session.token.isNullOrBlank()) {
+                _destination.value = SplashDestination.Login
+            } else {
+                if (session.role == "admin") {
+                    _destination.value = SplashDestination.Admin
+                } else {
+                    _destination.value = SplashDestination.Home
+                }
             }
         }
     }
