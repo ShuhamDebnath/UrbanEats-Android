@@ -1,9 +1,11 @@
 package com.shuham.urbaneats.presentation.home
 
+import android.util.Log
 import app.cash.turbine.test
 import com.shuham.urbaneats.MainDispatcherRule
 import com.shuham.urbaneats.domain.model.Product
 import com.shuham.urbaneats.domain.repository.UserRepository
+import com.shuham.urbaneats.domain.usecase.deal.GetDailyDealsUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetCategoriesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetMenuUseCase
 import com.shuham.urbaneats.domain.usecase.product.RefreshMenuUseCase
@@ -16,6 +18,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -32,20 +36,35 @@ class HomeViewModelTest {
     private val getMenuUseCase: GetMenuUseCase = mock()
     private val refreshMenuUseCase: RefreshMenuUseCase = mock()
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase = mock()
-    private val getCategoriesUseCase: GetCategoriesUseCase = mock() // <--- NEW MOCK
-    private val userRepository: UserRepository = mock()             // <--- NEW MOCK
+    private val getCategoriesUseCase: GetCategoriesUseCase = mock()
+    private val getDailyDealsUseCase: GetDailyDealsUseCase = mock()
+    private val userRepository: UserRepository = mock()
+
+    // For static mocking of Log
+    private lateinit var mockedLog: MockedStatic<Log>
 
     @Before
-    fun setUp() = runTest {
-        // 1. Default Behavior: Return empty lists/flows to prevent crashes
-        whenever(getMenuUseCase()).thenReturn(flowOf(emptyList()))
+    fun setUp() {
+        // 1. Mock Android Log to prevent "Method d in android.util.Log not mocked" error
+        mockedLog = Mockito.mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.d(anyString(), anyString()) }.thenReturn(0)
+        mockedLog.`when`<Int> { Log.e(anyString(), anyString()) }.thenReturn(0)
 
-        // Mock Categories (Success with empty list)
-        whenever(getCategoriesUseCase()).thenReturn(NetworkResult.Success(emptyList()))
+        // 2. Default Behavior: Return empty lists/flows/success to prevent crashes
+        // Use runTest block to call suspend functions
+        runTest {
+            whenever(getMenuUseCase()).thenReturn(flowOf(emptyList()))
+            whenever(getCategoriesUseCase()).thenReturn(NetworkResult.Success(emptyList()))
+            whenever(getDailyDealsUseCase.getDeals()).thenReturn(flowOf(emptyList()))
+            whenever(userRepository.getSelectedAddressId()).thenReturn(flowOf(null))
+            whenever(userRepository.getAddresses()).thenReturn(NetworkResult.Success(emptyList()))
+        }
+    }
 
-        // Mock User Address Logic (Return empty list or "Select Address")
-        whenever(userRepository.getAddresses()).thenReturn(NetworkResult.Success(emptyList()))
-        whenever(userRepository.getSelectedAddressId()).thenReturn(flowOf(null))
+    @org.junit.After
+    fun tearDown() {
+        // Must close static mock to avoid leaks or interference with other tests
+        mockedLog.close()
     }
 
     @Test
@@ -56,20 +75,19 @@ class HomeViewModelTest {
         )
         whenever(getMenuUseCase()).thenReturn(flowOf(dummyProducts))
 
-        // When (Initialize with ALL 5 dependencies)
+        // When
         viewModel = HomeViewModel(
             getMenuUseCase,
             refreshMenuUseCase,
             toggleFavoriteUseCase,
             getCategoriesUseCase,
+            getDailyDealsUseCase,
             userRepository
         )
 
         // Then
         viewModel.state.test {
-            val state = awaitItem() // First emission
-            // Depending on how fast flow emits, we might need to await item again or check property
-            // For simplicity, assuming initial load works:
+            val state = awaitItem()
             assertEquals(dummyProducts, state.products)
         }
     }
@@ -85,6 +103,7 @@ class HomeViewModelTest {
             refreshMenuUseCase,
             toggleFavoriteUseCase,
             getCategoriesUseCase,
+            getDailyDealsUseCase,
             userRepository
         )
         viewModel.refreshData()
