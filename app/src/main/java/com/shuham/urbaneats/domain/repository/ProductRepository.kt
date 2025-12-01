@@ -18,4 +18,10 @@ interface ProductRepository {
     suspend fun toggleFavorite(productId: String, isFavorite: Boolean)
 
     fun getFavoriteProducts(): Flow<List<Product>>
+
+
+    suspend fun deleteProduct(productId: String): NetworkResult<Unit>
+    suspend fun addProduct(product: Product): NetworkResult<Unit>
+
+    suspend fun updateProduct(id: String, product: Product): NetworkResult<Unit>
 }

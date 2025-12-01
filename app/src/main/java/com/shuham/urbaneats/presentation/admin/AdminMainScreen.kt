@@ -4,13 +4,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Fastfood
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -22,10 +24,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.shuham.urbaneats.presentation.admin.navigation.*
-import com.shuham.urbaneats.presentation.admin.screens.AdminOrdersScreen
+import androidx.navigation.toRoute
+import com.shuham.urbaneats.presentation.admin.navigation.AddEditProductRoute
+import com.shuham.urbaneats.presentation.admin.navigation.AdminCategoriesRoute
+import com.shuham.urbaneats.presentation.admin.navigation.AdminMenuRoute
+import com.shuham.urbaneats.presentation.admin.navigation.AdminOrdersRoute
+import com.shuham.urbaneats.presentation.admin.navigation.AdminProfileRoute
+import com.shuham.urbaneats.presentation.admin.screens.AddEditProductRoute
+import com.shuham.urbaneats.presentation.admin.screens.AdminCategoriesScreen
 import com.shuham.urbaneats.presentation.admin.screens.AdminMenuScreen
-import com.shuham.urbaneats.presentation.admin.screens.AddEditProductScreen
+import com.shuham.urbaneats.presentation.admin.screens.AdminOrdersScreen
 import com.shuham.urbaneats.presentation.admin.screens.AdminProfileScreen
 
 sealed class AdminBottomNavItem(
@@ -111,14 +119,18 @@ fun AdminMainScreen(
             composable<AdminMenuRoute> {
                 AdminMenuScreen(
                     onAddProductClick = { navController.navigate(AddEditProductRoute(null)) },
-                    onEditProductClick = { id -> navController.navigate(AddEditProductRoute(id)) }
+                    onEditProductClick = { id -> navController.navigate(AddEditProductRoute(id)) },
+                    onManageCategoriesClick = { navController.navigate(AdminCategoriesRoute) }
                 )
             }
 
             // 3. ADD/EDIT PRODUCT (Hidden Tab)
             composable<AddEditProductRoute> { backStackEntry ->
-                // val args = backStackEntry.toRoute<AddEditProductRoute>()
-                AddEditProductScreen(
+                val args = backStackEntry.toRoute<AddEditProductRoute>()
+
+                // Pass the ID (nullable) to the screen wrapper
+                AddEditProductRoute(
+                    productId = args.productId,
                     onBackClick = { navController.popBackStack() }
                 )
             }
@@ -126,6 +138,13 @@ fun AdminMainScreen(
             // 4. PROFILE
             composable<AdminProfileRoute> {
                 AdminProfileScreen(onLogout = onLogout)
+            }
+
+            // 5. CATEGORIES (NEW ROUTE)
+            composable<AdminCategoriesRoute> {
+                AdminCategoriesScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
             }
         }
     }

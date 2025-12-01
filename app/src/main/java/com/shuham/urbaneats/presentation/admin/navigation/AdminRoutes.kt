@@ -13,3 +13,6 @@ data class AddEditProductRoute(val productId: String? = null) // Null = Add, ID 
 
 @Serializable
 object AdminProfileRoute
+
+@Serializable
+object AdminCategoriesRoute

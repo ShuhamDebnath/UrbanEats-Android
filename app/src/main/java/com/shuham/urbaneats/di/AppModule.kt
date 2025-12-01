@@ -33,6 +33,8 @@ import com.shuham.urbaneats.domain.usecase.order.GetAllOrdersUseCase
 import com.shuham.urbaneats.domain.usecase.order.GetOrderDetailsUseCase
 import com.shuham.urbaneats.domain.usecase.order.GetOrdersUseCase
 import com.shuham.urbaneats.domain.usecase.order.UpdateOrderStatusUseCase
+import com.shuham.urbaneats.domain.usecase.product.AddUpdateProductUseCase
+import com.shuham.urbaneats.domain.usecase.product.DeleteProductUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetCategoriesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetFavoritesUseCase
 import com.shuham.urbaneats.domain.usecase.product.GetMenuUseCase
@@ -42,7 +44,11 @@ import com.shuham.urbaneats.domain.usecase.product.SearchProductsUseCase
 import com.shuham.urbaneats.domain.usecase.product.ToggleFavoriteUseCase
 import com.shuham.urbaneats.domain.usecase.validation.ValidateEmailUseCase
 import com.shuham.urbaneats.presentation.address.AddressViewModel
+import com.shuham.urbaneats.presentation.admin.screens.AddEditProductViewModel
+import com.shuham.urbaneats.presentation.admin.screens.AdminCategoriesViewModel
+import com.shuham.urbaneats.presentation.admin.screens.AdminMenuViewModel
 import com.shuham.urbaneats.presentation.admin.screens.AdminOrdersViewModel
+import com.shuham.urbaneats.presentation.admin.screens.AdminProfileViewModel
 import com.shuham.urbaneats.presentation.cart.CartViewModel
 import com.shuham.urbaneats.presentation.checkout.CheckoutViewModel
 import com.shuham.urbaneats.presentation.details.DetailViewModel
@@ -105,6 +111,8 @@ val appModule = module {
     factoryOf(::GetDailyDealsUseCase)
     factoryOf(::UpdateOrderStatusUseCase)
     factoryOf(::GetAllOrdersUseCase)
+    factoryOf(::DeleteProductUseCase)
+    factoryOf(::AddUpdateProductUseCase)
 
 
     // 4. ViewModel
@@ -122,6 +130,10 @@ val appModule = module {
     viewModelOf(::SignUpViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::AdminOrdersViewModel)
+    viewModelOf(::AdminMenuViewModel)
+    viewModelOf(::AddEditProductViewModel)
+    viewModelOf(::AdminCategoriesViewModel)
+    viewModelOf(::AdminProfileViewModel)
 
     // 1. Provide Database Instance (Singleton)
     single {

@@ -1,6 +1,5 @@
 package com.shuham.urbaneats.presentation.admin.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shuham.urbaneats.domain.model.Order
+import com.shuham.urbaneats.ui.theme.UrbanGreen
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,7 +40,7 @@ fun AdminOrdersScreen(
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             // 1. Status Tabs
-            ScrollableTabRow(
+            PrimaryScrollableTabRow(
                 selectedTabIndex = tabs.indexOf(state.selectedTab).coerceAtLeast(0),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.primary,
@@ -128,11 +128,11 @@ fun AdminOrderCard(
                     "Out for Delivery" -> {
                         Button(
                             onClick = { onStatusChange("Delivered") },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                            colors = ButtonDefaults.buttonColors(containerColor = UrbanGreen)
                         ) { Text("Mark Delivered") }
                     }
                     "Delivered" -> {
-                        Text("Completed", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold)
+                        Text("Completed", color = UrbanGreen, fontWeight = FontWeight.Bold)
                     }
                 }
             }

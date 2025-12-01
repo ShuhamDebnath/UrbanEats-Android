@@ -3,6 +3,12 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 
+
+// Configuration
+dotenv.config();
+const app = express();
+
+
 // Import Routes
 const authRoute = require('./routes/auth');
 const productsRoute = require('./routes/products');
@@ -11,12 +17,12 @@ const categoriesRoute = require('./routes/categories');
 const userRoute = require('./routes/user');
 const dealsRoute = require('./routes/deals');
 
-// Configuration
-dotenv.config();
-const app = express();
+
 
 // Middleware
-app.use(express.json());
+// FIX: Increase payload limit to 5MB (or larger if needed) by default 100kb
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use(cors());
 
 // Database Connection

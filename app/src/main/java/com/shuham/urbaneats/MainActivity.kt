@@ -143,8 +143,10 @@ class MainActivity : ComponentActivity() {
 
                     // 5. ADMIN DASHBOARD (NEW)
                     composable<AdminDashboardRoute> {
+                        // FIX: Use AdminMainScreen for the full bottom bar experience
                         AdminMainScreen(
                             onLogout = {
+                                // You might want a VM here to clear session first
                                 navController.navigate(LoginRoute) {
                                     popUpTo(0) { inclusive = true }
                                 }

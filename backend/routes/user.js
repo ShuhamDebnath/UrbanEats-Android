@@ -15,53 +15,22 @@ cloudinary.config({
 });
 
 
-
-
-
-
-// UPDATE PROFILE (With Cloudinary)
-router.put('/profile', async (req, res) => {
+// HELPER: Extract Public ID from Cloudinary URL
+// URL Example: https://res.cloudinary.com/.../image/upload/v1234/UrbanEats/profile/abc.jpg
+// Public ID: UrbanEats/profile/abc
+const extractPublicId = (url) => {
+    if (!url) return null;
     try {
-        const { userId, name, profileImage } = req.body;
-
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).send("User not found");
-
-        if (name) user.name = name;
-
-        // CLOUDINARY LOGIC
-        if (profileImage && profileImage.startsWith('data:image')) {
-            try {
-                // Upload Base64 image to Cloudinary
-                // "urbaneats_profiles" is the folder name in your Cloudinary console
-                const uploadResponse = await cloudinary.uploader.upload(profileImage, {
-                    folder: "urbaneats_profiles",
-                    resource_type: "image"
-                });
-
-                // Save the URL (https://res.cloudinary.com/...) instead of the raw string
-                user.profileImage = uploadResponse.secure_url;
-            } catch (uploadError) {
-                console.error("Cloudinary Upload Failed:", uploadError);
-                // Fallback: Don't save image if upload fails
-            }
-        } else if (profileImage) {
-            // If it's already a URL (not base64), just save it
-            user.profileImage = profileImage;
-        }
-
-        await user.save();
-
-        res.json({
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            profileImage: user.profileImage
-        });
-    } catch (err) {
-        res.status(500).send(err.message);
+        // Regex to capture everything after the version number (/v1234/) and before the extension (.jpg)
+        const regex = /\/v\d+\/(.+)\.[a-z]+$/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    } catch (error) {
+        console.error("Error extracting Public ID:", error);
+        return null;
     }
-});
+};
+
 
 // GET ADDRESSES
 router.get('/address', async (req, res) => {
@@ -114,6 +83,63 @@ router.delete('/address/:addressId', async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
+
+// UPDATE PROFILE (Now with Auto-Delete of Old Image)
+router.put('/profile', async (req, res) => {
+    try {
+        const { userId, name, profileImage } = req.body;
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).send("User not found");
+
+        if (name) user.name = name;
+
+        // If a NEW image is being uploaded (Base64 format)
+        if (profileImage && profileImage.startsWith('data:image')) {
+
+            // 1. Check if there is an OLD image to delete
+            if (user.profileImage && user.profileImage.includes("cloudinary")) {
+                const oldPublicId = extractPublicId(user.profileImage);
+                if (oldPublicId) {
+                    try {
+                        await cloudinary.uploader.destroy(oldPublicId);
+                        console.log(`🗑️ Deleted old image: ${oldPublicId}`);
+                    } catch (delError) {
+                        console.error("⚠️ Failed to delete old image:", delError);
+                        // We continue anyway, don't block the upload
+                    }
+                }
+            }
+
+            // 2. Upload the NEW image
+            try {
+                const uploadResponse = await cloudinary.uploader.upload(profileImage, {
+                    folder: "UrbanEats/profile",
+                    resource_type: "image"
+                });
+                user.profileImage = uploadResponse.secure_url;
+            } catch (uploadError) {
+                console.error("❌ Cloudinary Upload Failed:", uploadError);
+                return res.status(500).send("Image upload failed");
+            }
+        } else if (profileImage) {
+            // If it's just a URL string (no change, or restoring default)
+            user.profileImage = profileImage;
+        }
+
+        await user.save();
+
+        res.json({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            profileImage: user.profileImage
+        });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
 
 // CHANGE PASSWORD
 router.put('/password', async (req, res) => {

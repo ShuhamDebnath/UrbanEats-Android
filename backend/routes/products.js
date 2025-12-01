@@ -1,8 +1,96 @@
 const router = require('express').Router();
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const cloudinary = require('cloudinary').v2;
 
-// GET ALL PRODUCTS (Now populates category data)
+
+
+//Load env vars explicitly to ensure they exist before config
+require('dotenv').config();
+
+
+// Configure Cloudinary (Best practice: Use .env variables)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dgtjtv4zg", // Replace 'demo' with yours if .env fails
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+
+// HELPER: Extract Public ID from Cloudinary URL
+const extractPublicId = (url) => {
+    if (!url) return null;
+    try {
+        // Regex to capture everything after the version number and before the extension
+        const regex = /\/v\d+\/(.+)\.[a-z]+$/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    } catch (error) {
+        console.error("Error extracting Public ID:", error);
+        return null;
+    }
+};
+
+
+// HELPER: Upload Image
+async function uploadImage(base64Image) {
+    if (!base64Image) return null;
+    if (!base64Image.startsWith('data:image')) {
+        return base64Image;
+    }
+
+    try {
+        const result = await cloudinary.uploader.upload(base64Image, {
+            folder: "UrbanEats/product", // Specific folder for products
+            resource_type: "image"
+        });
+        return result.secure_url;
+    } catch (error) {
+        console.error("❌ Cloudinary Upload Failed:", error);
+        throw new Error("Image upload failed: " + error.message);
+    }
+}
+
+
+// HELPER: Upload Image
+async function uploadImage(base64Image) {
+    if (!base64Image) return null;
+    if (!base64Image.startsWith('data:image')) {
+        console.log("⚠️ Image is not base64, skipping upload.");
+        return base64Image; // Assume it's a URL
+    }
+
+    try {
+        //console.log("Uploading image to Cloudinary...");
+        // FIX: Updated folder path to 'UrbanEats/product'
+        const result = await cloudinary.uploader.upload(base64Image, {
+            folder: "UrbanEats/product",
+            resource_type: "image"
+        });
+        console.log("✅ Upload Success:", result.secure_url);
+        return result.secure_url;
+    } catch (error) {
+        console.error("❌ Cloudinary Upload Failed:", error);
+        throw new Error("Image upload failed: " + error.message);
+    }
+}
+
+
+
+
+// 1. SEARCH PRODUCTS
+router.get('/search', async (req, res) => {
+    try {
+        const query = req.query.q;
+        if (!query) return res.json([]);
+        const products = await Product.find({ name: { $regex: query, $options: 'i' } });
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// 2. GET ALL PRODUCTS
 router.get('/', async (req, res) => {
     try {
         const products = await Product.find();
@@ -13,37 +101,118 @@ router.get('/', async (req, res) => {
 });
 
 
-// 1. SEARCH PRODUCTS
-router.get('/search', async (req, res) => {
+// 3. ADD PRODUCT (With Debugging)
+router.post('/', async (req, res) => {
+//    console.log("--------------------------------");
+//    console.log("📝 Received Add Product Request");
+
     try {
-        const query = req.query.q;
-        if (!query) return res.json([]); // Return empty array if no query
+        let productData = req.body;
 
-        // FIX: Removed .populate('category'). Just send the raw ID.
-        // Also added .lean() for performance and cleaner JSON.
-        const products = await Product.find({
-            name: { $regex: query, $options: 'i' }
-        }).lean();
+        // Log what we received (excluding the massive image string)
+//        console.log("Data received:", {
+//            name: productData.name,
+//            price: productData.price,
+//            category: productData.category,
+//            hasImage: !!productData.imageUrl
+//        });
 
-        res.json(products);
+        // 1. Handle Image Upload
+        if (productData.imageUrl) {
+            productData.imageUrl = await uploadImage(productData.imageUrl);
+        }
+
+        // 2. Create Model
+        const product = new Product(productData);
+
+        // 3. Save to DB
+        console.log("Saving to MongoDB...");
+        const savedProduct = await product.save();
+
+        console.log("✅ Product Saved Successfully!");
+        res.json(savedProduct);
+
     } catch (err) {
-        console.error("Search Error:", err); // Log to Render dashboard
-        res.status(500).json({ message: "Server Error during search" });
+        console.error("🔥 CRITICAL SERVER ERROR 🔥");
+        console.error(err); // This prints the FULL error stack
+        res.status(500).json({
+            message: "Server Error",
+            error: err.message, // Send exact error to Android
+            details: err.errors // Send Mongoose validation errors if any
+        });
     }
 });
 
+// 4. UPDATE PRODUCT (With Image Cleanup)
+router.put('/:id', async (req, res) => {
+    try {
+        let updateData = req.body;
+        const productId = req.params.id;
 
-// SEARCH
-//router.get('/search', async (req, res) => {
-//    try {
-//        const query = req.query.q;
-//        if (!query) return res.json([]);
-//        const products = await Product.find({ name: { $regex: query, $options: 'i' } }).populate('category');
-//        res.json(products);
-//    } catch (err) {
-//        res.status(500).json({ message: err.message });
-//    }
-//});
+        // Handle Image Update
+        if (updateData.imageUrl && updateData.imageUrl.startsWith('data:image')) {
+            // A. Find existing product to get old image URL
+            const oldProduct = await Product.findById(productId);
+
+            if (oldProduct && oldProduct.imageUrl && oldProduct.imageUrl.includes("cloudinary")) {
+                const publicId = extractPublicId(oldProduct.imageUrl);
+                if (publicId) {
+                    // B. Delete old image from Cloudinary
+                    try {
+                        await cloudinary.uploader.destroy(publicId);
+                        console.log(`🗑️ Deleted old product image: ${publicId}`);
+                    } catch (e) {
+                        console.error("Failed to delete old image:", e);
+                    }
+                }
+            }
+
+            // C. Upload new image
+            updateData.imageUrl = await uploadImage(updateData.imageUrl);
+        }
+
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { $set: updateData },
+            { new: true }
+        );
+        res.json(updatedProduct);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// 5. DELETE PRODUCT (With Image Cleanup)
+router.delete('/:id', async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+
+        // 1. Delete image from Cloudinary
+        if (product.imageUrl && product.imageUrl.includes("cloudinary")) {
+            const publicId = extractPublicId(product.imageUrl);
+            if (publicId) {
+                try {
+                    await cloudinary.uploader.destroy(publicId);
+                    console.log(`🗑️ Deleted product image: ${publicId}`);
+                } catch (e) {
+                    console.error("Failed to delete image:", e);
+                }
+            }
+        }
+
+        // 2. Delete from DB
+        await Product.findByIdAndDelete(productId);
+        res.json({ message: "Product deleted" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 
 // SEED DATA (Categories + Products)
 router.post('/seed', async (req, res) => {
