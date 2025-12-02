@@ -1,5 +1,6 @@
 package com.shuham.urbaneats.presentation.home
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,28 +15,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,6 +50,7 @@ import com.shuham.urbaneats.presentation.components.FoodItemShimmer
 import com.shuham.urbaneats.presentation.home.components.CategorySection
 import com.shuham.urbaneats.presentation.home.components.DailyDealsSection
 import com.shuham.urbaneats.presentation.home.components.RestaurantCard
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 // ==========================================
@@ -55,21 +60,30 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeRoute(
     viewModel: HomeViewModel = koinViewModel(),
     onFoodClick: (Product) -> Unit,
-    onCartClick: () -> Unit,
-    onSearchClick: () -> Unit,
+    onNotificationClick: () -> Unit,
     onAddressClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val currentAddress by viewModel.currentAddress.collectAsStateWithLifecycle()
 
+    val snackBarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
 
     HomeScreen(
         state = state,
-        onRefresh = viewModel::refreshData,
         onProductClick = onFoodClick,
-        onCartClick = onCartClick,
-        onSearchClick = onSearchClick,
-        onFavoriteClick = viewModel::toggleFavorite,
+        onNotificationClick = {
+
+            scope.launch {
+                snackBarHostState.showSnackbar(
+                    message = "No Notifications",
+                    duration = SnackbarDuration.Short
+                )
+            }
+            onNotificationClick()
+
+        },
         onCategorySelect = viewModel::selectCategory,
         currentAddress = currentAddress,
         onAddressClick = onAddressClick
@@ -81,30 +95,28 @@ fun HomeRoute(
 // ==========================================
 
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     state: HomeState,
-    onRefresh: () -> Unit,
     onProductClick: (Product) -> Unit,
-    onCartClick: () -> Unit,
-    onSearchClick: () -> Unit,
-    onFavoriteClick: (Product) -> Unit,
+    onNotificationClick: () -> Unit,
     onCategorySelect: (String) -> Unit,
     currentAddress: String,
     onAddressClick: () -> Unit
 ) {
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             // --- FIXED HEADER SECTION (Address + Categories) ---
             Column(
                 modifier = Modifier
-                    .fillMaxWidth().background(MaterialTheme.colorScheme.background)
-                    .shadow(4.dp, spotColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f))
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .shadow(
+                        4.dp,
+                        spotColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f)
+                    )
                     .statusBarsPadding() // Push down from status bar
             ) {
                 // 1. Address Row
@@ -124,7 +136,7 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp,
 
-                        )
+                            )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = currentAddress,
@@ -143,18 +155,16 @@ fun HomeScreen(
 
                     Surface(
                         shape = CircleShape,
-                        // 4. Subtle background for avatar container
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f), // Subtle background
                         modifier = Modifier
                             .size(40.dp)
-                            .clickable { onCartClick() }
+                            .clickable { onNotificationClick() }
                     ) {
                         Icon(
-                            Icons.Default.ShoppingCart,
-                            null,
+                            imageVector = Icons.Outlined.Notifications, // Use Outlined for a cleaner look
+                            contentDescription = "Notifications",
                             modifier = Modifier.padding(8.dp),
-                            // 5. Icon color
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -171,10 +181,6 @@ fun HomeScreen(
                 // Add a tiny bit of bottom padding to the header
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Use Divider from Theme
-                //HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-
 
             }
         }
@@ -188,14 +194,25 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         ) {
 
-            // 1. Daily Deals
-            if (state.deals.isNotEmpty()) { // Only show if deals exist
+            // Daily Deals Section with Title
+            if (state.deals.isNotEmpty()) {
                 item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    // NEW TITLE HERE
+                    Text(
+                        text = "In the Spotlight",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
-                    DailyDealsSection(deals = state.deals) // <--- PASS THE DATA
-                    Spacer(modifier = Modifier.height(32.dp))
+
+                    DailyDealsSection(deals = state.deals)
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
+
 
             // 2. Popular Section Title
             item {
@@ -215,7 +232,11 @@ fun HomeScreen(
             } else {
                 if (state.products.isEmpty()) {
                     item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(40.dp), contentAlignment = Alignment.Center
+                        ) {
                             Text(
                                 text = "No items found",
                                 style = MaterialTheme.typography.bodyLarge, // Typography Applied
@@ -250,11 +271,7 @@ private fun HomeScreenPrev() {
         {},
         {},
         {},
-        {},
-        {},
-        {},
         "",
         {}
-
     )
 }

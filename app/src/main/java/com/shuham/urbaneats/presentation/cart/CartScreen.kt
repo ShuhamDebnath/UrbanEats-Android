@@ -216,7 +216,7 @@ fun UpsellSection(onAdd: (Product) -> Unit) {
             name = "Fries",
             description = "Crispy Salted",
             price = 3.50,
-            imageUrl = "https://images.unsplash.com/photo-1573080496987-a199f8cd0a58?w=500",
+            imageUrl = "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?q=80&w=1025&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             rating = 4.6,
             category = "Sides"
         )
@@ -335,7 +335,7 @@ fun CartItemCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50)) // Theme surface variant
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(50)) // Theme surface variant
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Icon(

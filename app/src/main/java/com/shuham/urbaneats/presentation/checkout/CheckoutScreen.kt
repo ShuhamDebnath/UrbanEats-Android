@@ -286,7 +286,7 @@ fun AddressCard(address: Address, textColor: Color, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(60.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant) // Theme variant bg
+                    .background(MaterialTheme.colorScheme.primaryContainer) // Theme variant bg
             ) {
                 Icon(
                     Icons.Default.LocationOn,
@@ -300,7 +300,7 @@ fun AddressCard(address: Address, textColor: Color, onClick: () -> Unit) {
 
             Column {
                 Text(
-                    "Home",
+                    text = address.label,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface

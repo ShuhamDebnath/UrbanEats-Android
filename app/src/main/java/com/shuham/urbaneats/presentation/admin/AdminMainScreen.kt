@@ -49,11 +49,9 @@ sealed class AdminBottomNavItem(
         "Orders"
     )
 
-    object Menu :
-        AdminBottomNavItem(AdminMenuRoute, Icons.Default.Fastfood, Icons.Outlined.Fastfood, "Menu")
+    object Menu : AdminBottomNavItem(AdminMenuRoute, Icons.Default.Fastfood, Icons.Outlined.Fastfood, "Menu")
 
-    object Profile :
-        AdminBottomNavItem(AdminProfileRoute, Icons.Default.Person, Icons.Outlined.Person, "Admin")
+    object Profile : AdminBottomNavItem(AdminProfileRoute, Icons.Default.Person, Icons.Outlined.Person, "Admin")
 }
 
 @Composable
@@ -108,7 +106,7 @@ fun AdminMainScreen(
         NavHost(
             navController = navController,
             startDestination = AdminOrdersRoute,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             // 1. ORDERS
             composable<AdminOrdersRoute> {

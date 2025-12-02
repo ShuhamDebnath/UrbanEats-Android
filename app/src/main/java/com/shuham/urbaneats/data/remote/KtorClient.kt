@@ -13,8 +13,8 @@ import kotlinx.serialization.json.Json
 object KtorClient {
 
     //const val BASE_URL = "http://localhost:3000/"// Localhost for Emulator
-    const val BASE_URL = "http://10.0.2.2:3000/"// Localhost for Emulator
-    //const val BASE_URL = "https://urbaneats-api.onrender.com/"// Real server render.com
+    //const val BASE_URL = "http://10.0.2.2:3000/"// Localhost for Emulator
+    const val BASE_URL = "https://urbaneats-api.onrender.com/"// Real server render.com
 
 
     val httpClient = HttpClient(OkHttp) {

@@ -27,8 +27,13 @@ data class AddAddressRequest(val userId: String, val label: String, val fullAddr
 data class UpdateProfileRequest(val userId: String, val name: String, val profileImage: String?)
 
 @Serializable
-data class UpdateProfileResponse(val id: String, val name: String, val email: String, val profileImage: String?, val role: String)
-
+data class UpdateProfileResponse(
+    val id: String,
+    val name: String,
+    val email: String,
+    val profileImage: String?,
+    val role: String = "user"
+)
 class UserRepositoryImpl(
     private val client: HttpClient,
     private val tokenManager: TokenManager

@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Base64
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.shuham.urbaneats.data.local.UserSession
 import org.koin.androidx.compose.koinViewModel
+import kotlin.math.log
 
 @Composable
 fun SettingsRoute(
@@ -61,12 +63,22 @@ fun SettingsRoute(
     val currentUser by viewModel.userSession.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    // Control Dialogs from Route level based on ViewModel Events
+    var showProfileDialog by remember { mutableStateOf(false) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
+
     // Handle Toasts
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is SettingsEffect.ShowToast -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_LONG).show()
+                }
+                is SettingsEffect.CloseProfileDialog -> {
+                    showProfileDialog = false // <--- CLOSE IT AUTOMATICALLY
+                }
+                is SettingsEffect.ClosePasswordDialog -> {
+                    showPasswordDialog = false
                 }
             }
         }
@@ -76,12 +88,17 @@ fun SettingsRoute(
     SettingsScreen(
         state = state,
         currentUser = currentUser,
+        showProfileDialog = showProfileDialog, // Pass state down
+        showPasswordDialog = showPasswordDialog,
+        onShowProfileDialog = { showProfileDialog = it }, // Pass setter
+        onShowPasswordDialog = { showPasswordDialog = it },
         onBackClick = onBackClick,
-        onTogglePush = viewModel::togglePush,
-        onToggleEmail = viewModel::toggleEmail,
         onThemeChange = viewModel::setTheme,
         onUpdateProfile = viewModel::updateProfile,
-        onChangePassword = viewModel::changePassword
+        onChangePassword = viewModel::changePassword,
+        onTogglePush = viewModel::togglePush,
+        onToggleEmail = viewModel::toggleEmail,
+        onToggleTheme = viewModel::toggleTheme
     )
 }
 
@@ -90,17 +107,22 @@ fun SettingsRoute(
 fun SettingsScreen(
     state: SettingsState,
     currentUser: UserSession?,
+    showProfileDialog: Boolean,
+    showPasswordDialog: Boolean,
+    onShowProfileDialog: (Boolean) -> Unit,
+    onShowPasswordDialog: (Boolean) -> Unit,
     onBackClick: () -> Unit,
-    onTogglePush: (Boolean) -> Unit,
-    onToggleEmail: (Boolean) -> Unit,
     onThemeChange: (String) -> Unit,
     onUpdateProfile: (String, String?) -> Unit,
-    onChangePassword: (String, String) -> Unit
+    onChangePassword: (String, String) -> Unit,
+    onTogglePush: (Boolean) -> Unit,
+    onToggleEmail: (Boolean) -> Unit,
+    onToggleTheme: (Boolean) -> Unit
 ) {
 
     var showThemeDialog by remember { mutableStateOf(false) }
-    var showProfileDialog by remember { mutableStateOf(false) }
-    var showPasswordDialog by remember { mutableStateOf(false) }
+    //var showProfileDialog by remember { mutableStateOf(false) }
+    //var showPasswordDialog by remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -142,13 +164,13 @@ fun SettingsScreen(
                 icon = Icons.Default.Person,
                 title = "Edit Profile",
                 subtitle = currentUser?.name,
-                onClick = { showProfileDialog = true }
+                onClick = { onShowProfileDialog(true) }
             )
             Spacer(modifier = Modifier.height(12.dp))
             SettingsActionCard(
                 icon = Icons.Default.Lock,
                 title = "Change Password",
-                onClick = { showPasswordDialog = true }
+                onClick = { onShowPasswordDialog(true) }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -226,22 +248,23 @@ fun SettingsScreen(
     if (showProfileDialog) {
         EditProfileDialog(
             currentName = currentUser?.name ?: "",
-            currentImageUrl = currentUser?.profileImage, // Pass current URL
-            onDismiss = { showProfileDialog = false },
+            currentImageUrl = currentUser?.profileImage,
             isLoading = state.isUpdating,
+            // Only allow manual dismiss if NOT loading
+            onDismiss = { if (!state.isUpdating) onShowProfileDialog(false) },
             onSave = { name, base64Image ->
                 onUpdateProfile(name, base64Image)
-                showProfileDialog = false
+                // Do NOT close here. Wait for ViewModel event.
             }
         )
     }
 
     if (showPasswordDialog) {
         ChangePasswordDialog(
-            onDismiss = { showPasswordDialog = false },
+            onDismiss = { onShowPasswordDialog(false) },
             onConfirm = { old, new ->
                 onChangePassword(old, new)
-                showPasswordDialog = false
+                // Do NOT close here. Wait for ViewModel event.
             }
         )
     }
@@ -271,7 +294,9 @@ fun SettingsActionCard(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Theme Surface
         elevation = CardDefaults.cardElevation(0.dp),
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -597,7 +622,11 @@ fun ThemeOption(text: String, value: String, currentTheme: String, onSelect: (St
         Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .selectable(selected = (text == currentTheme), onClick = { onSelect(value) }, role = Role.RadioButton)
+            .selectable(
+                selected = (text == currentTheme),
+                onClick = { onSelect(value) },
+                role = Role.RadioButton
+            )
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

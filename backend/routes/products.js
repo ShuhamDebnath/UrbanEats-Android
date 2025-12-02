@@ -83,9 +83,26 @@ router.get('/search', async (req, res) => {
     try {
         const query = req.query.q;
         if (!query) return res.json([]);
-        const products = await Product.find({ name: { $regex: query, $options: 'i' } });
+        //const products = await Product.find({ name: { $regex: query, $options: 'i' } });
+
+        // Step A: Find Categories that match the search term
+        // e.g., Searching "Burg" finds the "Burger" category
+        const matchingCategories = await Category.find({
+            name: { $regex: query, $options: 'i' }
+        }).select('_id'); // We only need the IDs
+
+        const categoryIds = matchingCategories.map(cat => cat._id);
+
+        // Step B: Find Products that match Name OR contain one of the Category IDs
+        const products = await Product.find({
+            $or: [
+                { name: { $regex: query, $options: 'i' } }, // Match Product Name
+                { category: { $in: categoryIds } }          // Match Category ID
+            ]
+        });
         res.json(products);
-    } catch (err) {
+    }catch (err) {
+        console.error("Search Error:", err);
         res.status(500).json({ message: err.message });
     }
 });
@@ -214,10 +231,11 @@ router.delete('/:id', async (req, res) => {
 });
 
 
-// SEED DATA (Categories + Products)
+
+// --- THE MEGA SEED ---
 router.post('/seed', async (req, res) => {
     try {
-        // 1. Clear Old Data
+        // 1. Clean Slate
         await Product.deleteMany({});
         await Category.deleteMany({});
 
@@ -225,67 +243,244 @@ router.post('/seed', async (req, res) => {
         const categoriesData = [
             { name: "Burger", imageUrl: "https://cdn-icons-png.flaticon.com/512/3075/3075977.png" },
             { name: "Pizza", imageUrl: "https://cdn-icons-png.flaticon.com/512/1404/1404945.png" },
-            { name: "Biryani", imageUrl: "https://cdn-icons-png.flaticon.com/128/4781/4781223.png.png" },
             { name: "Sushi", imageUrl: "https://cdn-icons-png.flaticon.com/512/2252/2252075.png" },
             { name: "Vegan", imageUrl: "https://cdn-icons-png.flaticon.com/512/2918/2918148.png" },
-            { name: "Drinks", imageUrl: "https://cdn-icons-png.flaticon.com/512/2738/2738730.png" },
+            { name: "Cold Drink", imageUrl: "https://cdn-icons-png.flaticon.com/512/2738/2738730.png" },
+            { name: "Biriyani", imageUrl: "https://cdn-icons-png.flaticon.com/512/1065/1065715.png" },
+            { name: "Dessert", imageUrl: "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" },
+            { name: "Roll", imageUrl: "https://cdn-icons-png.flaticon.com/512/1231/1231662.png" }
         ];
 
         const createdCategories = await Category.insertMany(categoriesData);
-
-        // Helper to find ID by Name
         const getCatId = (name) => createdCategories.find(c => c.name === name)._id;
 
-        // 3. Create Products Linked to Categories
+        // 3. Create 20+ Products
         const productsData = [
+            // --- BURGERS ---
             {
-                name: "Spicy Chicken Burger",
-                description: "Fiery hot chicken patty.",
-                price: 12.99,
-                imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500",
-                category: getCatId("Burger"), // Link!
-                sizes: [{ name: "Regular", price: 0 }, { name: "Large", price: 3.50 }],
-                addons: [{ name: "Extra Cheese", price: 1.50 }]
+                name: "Classic Smash Burger",
+                description: "Two smashed beef patties, american cheese, pickles, onions, and secret sauce.",
+                price: 12.50,
+                imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800",
+                rating: 4.8,
+                category: getCatId("Burger"),
+                sizes: [{ name: "Single", price: 0 }, { name: "Double", price: 3.0 }],
+                addons: [{ name: "Bacon", price: 2.0 }, { name: "Extra Sauce", price: 0.5 }]
             },
             {
-                name: "Margherita Pizza",
-                description: "Classic tomato & basil.",
-                price: 14.50,
-                imageUrl: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=500",
-                category: getCatId("Pizza"),
-                sizes: [{ name: "Medium", price: 0 }, { name: "Large", price: 5.00 }],
-                addons: [{ name: "Extra Cheese", price: 2.00 }]
+                name: "Spicy Crispy Chicken",
+                description: "Fried chicken breast, spicy mayo, lettuce, and pickles on a brioche bun.",
+                price: 11.99,
+                imageUrl: "https://images.unsplash.com/photo-1615297928064-24977384d0f5?w=800",
+                rating: 4.7,
+                category: getCatId("Burger"),
+                sizes: [{ name: "Regular", price: 0 }, { name: "Large Meal", price: 4.0 }],
+                addons: [{ name: "Cheese Slice", price: 1.0 }, { name: "Jalapenos", price: 0.75 }]
             },
-             {
-                 name: "Chicken Biryani",
-                 description: "Aromatic basmati rice cooked with tender chicken and spices.",
-                 price: 18.00,
-                 imageUrl: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500",
-                 rating: 4.9,
-                 category: getCatId("Biryani"),
-                 sizes: [
-                     { name: "Single", price: 0 },
-                     { name: "Family Pack", price: 12.00 }
-                 ],
-                 addons: [
-                     { name: "Extra Raita", price: 1.00 },
-                     { name: "Boiled Egg", price: 1.50 }
-                 ]
-             },
-             {
-                 name: "Coca Cola",
-                 description: "Chilled refreshing cola.",
-                 price: 2.50,
-                 imageUrl: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500",
-                 rating: 4.5,
-                 category: getCatId("Drinks"),
-                 sizes: [
-                     { name: "Can (330ml)", price: 0 },
-                     { name: "Bottle (500ml)", price: 1.00 }
-                 ],
-                 addons: []
-             }
+            {
+                name: "Truffle Mushroom Swiss",
+                description: "Gourmet beef patty, swiss cheese, sautéed mushrooms, truffle aioli.",
+                price: 15.50,
+                imageUrl: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=800",
+                rating: 4.9,
+                category: getCatId("Burger"),
+                sizes: [{ name: "Regular", price: 0 }],
+                addons: [{ name: "Extra Truffle", price: 2.0 }]
+            },
 
+            // --- PIZZA ---
+            {
+                name: "Margherita Classico",
+                description: "San Marzano tomato sauce, fresh mozzarella, basil, extra virgin olive oil.",
+                price: 14.00,
+                imageUrl: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800",
+                rating: 4.6,
+                category: getCatId("Pizza"),
+                sizes: [{ name: "12 inch", price: 0 }, { name: "16 inch", price: 5.0 }],
+                addons: [{ name: "Extra Cheese", price: 2.0 }, { name: "Chili Oil", price: 0.0 }]
+            },
+            {
+                name: "Pepperoni Feast",
+                description: "Loaded with crispy pepperoni slices and mozzarella cheese.",
+                price: 16.50,
+                imageUrl: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=800",
+                rating: 4.8,
+                category: getCatId("Pizza"),
+                sizes: [{ name: "12 inch", price: 0 }, { name: "16 inch", price: 6.0 }],
+                addons: [{ name: "Hot Honey", price: 1.5 }, { name: "Ranch Dip", price: 0.75 }]
+            },
+            {
+                name: "BBQ Chicken",
+                description: "BBQ sauce base, grilled chicken, red onions, cilantro.",
+                price: 17.00,
+                imageUrl: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800",
+                rating: 4.7,
+                category: getCatId("Pizza"),
+                sizes: [{ name: "12 inch", price: 0 }, { name: "16 inch", price: 6.0 }],
+                addons: [{ name: "Extra Chicken", price: 3.0 }]
+            },
+
+            // --- SUSHI ---
+            {
+                name: "Salmon Nigiri Set",
+                description: "5 pieces of fresh salmon over vinegared rice.",
+                price: 12.00,
+                imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800",
+                rating: 4.9,
+                category: getCatId("Sushi"),
+                sizes: [{ name: "5 pcs", price: 0 }, { name: "10 pcs", price: 10.0 }],
+                addons: [{ name: "Wasabi", price: 0.0 }, { name: "Soy Sauce", price: 0.0 }]
+            },
+            {
+                name: "Dragon Roll",
+                description: "Eel and cucumber inside, topped with avocado and eel sauce.",
+                price: 14.50,
+                imageUrl: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=800",
+                rating: 4.8,
+                category: getCatId("Sushi"),
+                sizes: [{ name: "8 pcs", price: 0 }],
+                addons: [{ name: "Spicy Mayo", price: 0.5 }]
+            },
+            {
+                name: "Spicy Tuna Roll",
+                description: "Fresh tuna mixed with spicy mayo and cucumber.",
+                price: 9.50,
+                imageUrl: "https://images.unsplash.com/photo-1553621042-f6e147245754?w=800",
+                rating: 4.6,
+                category: getCatId("Sushi"),
+                sizes: [{ name: "6 pcs", price: 0 }],
+                addons: [{ name: "Extra Ginger", price: 0.5 }]
+            },
+
+            // --- VEGAN ---
+            {
+                name: "Vegan Buddha Bowl",
+                description: "Quinoa, roasted chickpeas, avocado, kale, tahini dressing.",
+                price: 13.50,
+                imageUrl: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+                rating: 4.7,
+                category: getCatId("Vegan"),
+                sizes: [{ name: "Regular", price: 0 }, { name: "Large", price: 3.0 }],
+                addons: [{ name: "Extra Tofu", price: 2.0 }]
+            },
+            {
+                name: "Beyond Burger",
+                description: "Plant-based patty, vegan cheese, lettuce, tomato, vegan mayo.",
+                price: 14.00,
+                imageUrl: "https://images.unsplash.com/photo-1520072959219-c595dc3f3a58?w=800",
+                rating: 4.5,
+                category: getCatId("Vegan"),
+                sizes: [{ name: "Regular", price: 0 }],
+                addons: [{ name: "Avocado", price: 2.0 }]
+            },
+
+            // --- BIRIYANI ---
+            {
+                name: "Hyderabadi Chicken Biriyani",
+                description: "Authentic dum biriyani with marinated chicken and saffron rice.",
+                price: 15.00,
+                imageUrl: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800",
+                rating: 4.9,
+                category: getCatId("Biriyani"),
+                sizes: [{ name: "Single", price: 0 }, { name: "Family Pack", price: 15.0 }],
+                addons: [{ name: "Raita", price: 1.0 }, { name: "Salad", price: 0.5 }]
+            },
+            {
+                name: "Mutton Biriyani",
+                description: "Tender mutton pieces cooked with aromatic spices and basmati rice.",
+                price: 18.00,
+                imageUrl: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=800",
+                rating: 4.8,
+                category: getCatId("Biriyani"),
+                sizes: [{ name: "Single", price: 0 }],
+                addons: [{ name: "Extra Egg", price: 1.0 }]
+            },
+
+            // --- ROLLS ---
+            {
+                name: "Chicken Kathi Roll",
+                description: "Grilled chicken chunks wrapped in a paratha with onions and chutney.",
+                price: 8.50,
+                imageUrl: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800",
+                rating: 4.6,
+                category: getCatId("Roll"),
+                sizes: [{ name: "Regular", price: 0 }, { name: "Double Egg", price: 1.5 }],
+                addons: [{ name: "Extra Cheese", price: 1.0 }]
+            },
+            {
+                name: "Paneer Tikka Roll",
+                description: "Spicy paneer cubes wrapped with veggies and mint sauce.",
+                price: 7.50,
+                imageUrl: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800",
+                rating: 4.5,
+                category: getCatId("Roll"),
+                sizes: [{ name: "Regular", price: 0 }],
+                addons: [{ name: "Extra Sauce", price: 0.5 }]
+            },
+
+            // --- DESSERT ---
+            {
+                name: "Chocolate Lava Cake",
+                description: "Warm chocolate cake with a gooey molten center.",
+                price: 7.00,
+                imageUrl: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=800",
+                rating: 4.9,
+                category: getCatId("Dessert"),
+                sizes: [{ name: "Single", price: 0 }],
+                addons: [{ name: "Vanilla Ice Cream", price: 2.0 }]
+            },
+            {
+                name: "New York Cheesecake",
+                description: "Creamy cheesecake with a graham cracker crust and strawberry topping.",
+                price: 6.50,
+                imageUrl: "https://images.unsplash.com/photo-1524351199678-941a58a3df50?w=800",
+                rating: 4.7,
+                category: getCatId("Dessert"),
+                sizes: [{ name: "Slice", price: 0 }],
+                addons: [{ name: "Extra Strawberry Sauce", price: 1.0 }]
+            },
+            {
+                name: "Tiramisu",
+                description: "Classic Italian dessert with coffee-soaked ladyfingers and mascarpone.",
+                price: 8.00,
+                imageUrl: "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=800",
+                rating: 4.8,
+                category: getCatId("Dessert"),
+                sizes: [{ name: "Slice", price: 0 }],
+                addons: []
+            },
+
+            // --- DRINKS ---
+            {
+                name: "Mango Lassi",
+                description: "Yogurt-based mango smoothie.",
+                price: 4.50,
+                imageUrl: "https://images.unsplash.com/photo-1546173159-315724a31696?w=800",
+                rating: 4.8,
+                category: getCatId("Cold Drink"),
+                sizes: [{ name: "Regular", price: 0 }, { name: "Large", price: 1.5 }],
+                addons: []
+            },
+            {
+                name: "Iced Coffee",
+                description: "Cold brewed coffee with milk and ice.",
+                price: 3.50,
+                imageUrl: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800",
+                rating: 4.6,
+                category: getCatId("Cold Drink"),
+                sizes: [{ name: "Regular", price: 0 }],
+                addons: [{ name: "Oat Milk", price: 1.0 }, { name: "Caramel Syrup", price: 0.5 }]
+            },
+            {
+                name: "Berry Smoothie",
+                description: "Blend of strawberries, blueberries, and raspberries.",
+                price: 6.00,
+                imageUrl: "https://images.unsplash.com/photo-1623595119608-e905d2d4b6c3?w=800",
+                rating: 4.7,
+                category: getCatId("Cold Drink"),
+                sizes: [{ name: "Regular", price: 0 }],
+                addons: [{ name: "Protein Powder", price: 2.0 }]
+            }
         ];
 
         const savedProducts = await Product.insertMany(productsData);

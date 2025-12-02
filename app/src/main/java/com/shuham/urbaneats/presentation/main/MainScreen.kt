@@ -177,17 +177,7 @@ fun MainScreen(
                             )
                         )
                     },
-                    onCartClick = { navController.navigate(CartRoute) },
-                    onSearchClick = {
-                        navController.navigate(SearchRoute) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    //onProfileClick = { navController.navigate(ProfileRoute) }
+                    onNotificationClick = {  },
                     onAddressClick = { navController.navigate(AddressListRoute) }
                 )
             }

@@ -13,7 +13,7 @@ import com.shuham.urbaneats.data.local.entity.ProductEntity
 
 @Database(
     entities = [ProductEntity::class, CartItemEntity::class, DealEntity::class],
-    version = 6,
+    version = 1,
     exportSchema = false // Keep it simple for now
 )
 @TypeConverters(ProductTypeConverters::class)

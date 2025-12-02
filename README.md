@@ -8,25 +8,32 @@
 
 ## 📱 Project Overview
 
-**UrbanEats** is a fully functional, offline-first food delivery application built to demonstrate industry-standard Android development practices.  
-Unlike typical tutorial apps, this project focuses on scalability, offline-first data persistence, and complex state management using the **MVI (Model-View-Intent)** pattern.
+**UrbanEats** is a production-grade, offline-first food delivery ecosystem consisting of a User Application for ordering and an Admin Dashboard for business management. It features a robust Node.js backend, role-based access control (RBAC), and a modern, reactive Android UI.
 
 - **Role:** Full Stack (Android + Node.js Backend)
-- **Development Time:** 30 Days (Intensive)
-- **Goal:** Production-ready architecture with robust error handling and automated testing.
+- **Architecture:** Single-Activity, Multi-Module Clean Architecture (MVVM)
+- **Goal:** To build a scalable, fault-tolerant e-commerce platform with real-time capabilities and automated CI/CD pipelines.
 
 ---
 
 
 ## 📸 Screenshots
 
-| Home Feed | Search & Explore | Cart & Bill | Order Tracking |
-| :---: | :---: | :---: | :---: |
-| <img src="screenshots/home.png" width="200"/> | <img src="screenshots/search.png" width="200"/> | <img src="screenshots/cart.png" width="200"/> | <img src="screenshots/track.png" width="200"/> |
+👤 User Application
 
-| Profile & Settings | Login & Auth | Success Screen | No Internet |
+| Home Feed | Details |Search & Explore | Cart | Profile |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="screenshots/home.png" width="200"/> | <img src="screenshots/details.png" width="200"/> | <img src="screenshots/search.png" width="200"/> | <img src="screenshots/cart.png" width="200"/> | <img src="screenshots/profile.png" width="200"/> |
+
+| Login | Signup | Checkout | Order Success | Track Order |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="screenshots/login.png" width="200"/> | <img src="screenshots/signup.png" width="200"/> | <img src="screenshots/checkout.png" width="200"/> | <img src="screenshots/order_success.png" width="200"/> | <img src="screenshots/track_order.png" width="200"/> |
+
+🛡️ Admin Dashboard
+
+| Orders | Manage Menu | Admin Profile | Splash |
 | :---: | :---: | :---: | :---: |
-| <img src="screenshots/profile.png" width="200"/> | <img src="screenshots/login.png" width="200"/> | <img src="screenshots/success.png" width="200"/> | <img src="screenshots/no_internet.png" width="200"/> |
+| <img src="screenshots/admin_order.png" width="200"/> | <img src="screenshots/admin_menu.png" width="200"/> | <img src="screenshots/admin_profile.png" width="200"/> | <img src="screenshots/splash.png" width="200"/> |
 
 ---
 
@@ -40,19 +47,24 @@ This project adheres to **Modern Android Development (MAD)** guidelines.
 * **Dependency Injection:** Koin (Lightweight, Kotlin-first framework).
 * **Networking:** Ktor Client (Multiplatform-ready engine with content negotiation).
 * **Local Database:** Room (SQLite) for offline caching and Single Source of Truth (SSOT).
-* **Async Processing:** Kotlin Coroutines & Flows.
+* **Async Processing:** Kotlin Coroutines & Flows (StateFlow/SharedFlow).
 * **Background Work:** WorkManager (Simulated Order Notifications).
 * **Image Loading:** Coil.
+* **Navigation:** Type-safe Jetpack Navigation Compose.
 
 ### ⚙️ Backend & DevOps
 * **Backend:** Node.js, Express.js.
 * **Database:** MongoDB Atlas (Mongoose ODM).
-* **Media Storage:** Cloudinary (for Profile Image uploads).
-* **CI/CD:** GitHub Actions (Automated Unit Tests & Release APK generation).
+* **Media Storage:** Cloudinary API for optimized image storage (Product & Profile images).
+* **Security:** JWT (JSON Web Tokens) for session management and Role-Based Access Control.
+* **DevOps:** GitHub Actions for CI/CD (Automated Testing & Release Builds)..
 
 ---
 
 ## 🚀 Key Features
+
+### For Users
+
 
 * **Offline-First Experience:** Users can browse the menu and view their cart even without internet. The app syncs when connectivity returns.
 * **Dynamic Product Options:** Products support server-driven sizes and add-ons (e.g., "Extra Cheese"), configured via the backend.
@@ -63,23 +75,36 @@ This project adheres to **Modern Android Development (MAD)** guidelines.
 * **User Profile:** Full CRUD for user profile, including image upload to Cloudinary.
 * **Theme Engine:** Supports Light, Dark, and System Default modes with immediate UI updates.
 * **Address Management:** Multi-address support synced with the server.
-* **Robust Error Handling:** Dedicated screens for API failures and connectivity issues.
 
+### For Admins
+
+
+* **Menu Management:** Full CRUD (Create, Read, Update, Delete) for products and categories.
+* **Order Processing:** View incoming orders and update status (Pending -> Preparing -> Delivered).
+* **RBAC:** Secure login flow that redirects users based on their role (Admin vs. Customer).
 ---
 
 ## 🏗 Architecture Diagram
 
-The app follows the **Single Source of Truth (SSOT)** principle. The UI observes the Database, and the Repository syncs the Database with the Network.
+The app strictly follows the **Single Source of Truth (SSOT)** principle. The UI observes the Database, while the Repository manages data synchronization.
 
 ```mermaid
 graph TD
-    UI[Compose UI] -->|Observes State| VM[ViewModel]
-    VM -->|Executes| UC[Use Cases]
-    UC -->|Calls| Repo[Repository]
-    Repo -->|Reads/Writes| DB[(Room Database)]
-    Repo -->|Fetches| API[Ktor Client]
-    API -->|JSON| Backend[Node.js Server]
-````
+    subgraph "Presentation Layer"
+        UI[Compose Screens] -->|Events| VM[ViewModel]
+        VM -->|StateFlow| UI
+    end
+    subgraph "Domain Layer"
+        VM -->|Invokes| UC[Use Cases]
+        UC -->|Calls| Repo[Repository Interface]
+    end
+    subgraph "Data Layer"
+        Repo -->|Implements| RepoImpl[Repository Impl]
+        RepoImpl -->|Reads/Writes| DB[(Room Database)]
+        RepoImpl -->|Fetches| API[Ktor Client]
+        API <-->|JSON| Backend[Node.js Server]
+    end 
+  ```
 
 -----
 
@@ -96,8 +121,15 @@ graph TD
 ```bash
 cd backend
 npm install
-# Create a .env file with DB_CONNECT, TOKEN_SECRET, and CLOUDINARY keys
+# Create a .env file in /backend with:
+# DB_CONNECT=your_mongodb_url
+# TOKEN_SECRET=your_jwt_secret
+# CLOUDINARY_CLOUD_NAME=...
+# CLOUDINARY_API_KEY=...
+# CLOUDINARY_API_SECRET=...
+
 node server.js
+
 ````
 
 ### 2\. Android Setup
@@ -138,4 +170,3 @@ Run tests via terminal:
 ## 📄 License
 
 This project is for educational purposes and portfolio demonstration.
-"""

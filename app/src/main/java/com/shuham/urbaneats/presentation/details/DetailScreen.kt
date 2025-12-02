@@ -53,11 +53,11 @@ fun DetailRoute(
     val state by viewModel.state.collectAsState()
 
     // Snack State
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }) { innerPadding ->
+        snackbarHost = { SnackbarHost(snackBarHostState) }) { innerPadding ->
         // We pass innerPadding to avoid overlapping with snackbar, though Box usually handles it.
         Box(modifier = Modifier.padding(innerPadding)) {
             DetailScreen(
@@ -68,7 +68,7 @@ fun DetailRoute(
 
                     // Show Snackbar with Action
                     scope.launch {
-                        val result = snackbarHostState.showSnackbar(
+                        val result = snackBarHostState.showSnackbar(
                             message = "Added to Cart",
                             actionLabel = "View Cart", // <--- CLICKABLE ACTION
                             duration = SnackbarDuration.Short
@@ -287,13 +287,13 @@ fun DetailScreen(
                                 OutlinedTextField(
                                     value = specialInstructions,
                                     onValueChange = { specialInstructions = it },
-                                    placeholder = { Text("Add a note (e.g., no onions)", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                                    placeholder = { Text("Add a note (e.g., no onions)", color = MaterialTheme.colorScheme.surface) },
                                     modifier = Modifier.fillMaxWidth().height(100.dp),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         // Theme-aware input colors
-                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        focusedContainerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
                                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                                         unfocusedBorderColor = Color.Transparent,
                                         cursorColor = MaterialTheme.colorScheme.primary,
@@ -319,7 +319,7 @@ fun DetailScreen(
                             ) {
                                 // Qty Selector
                                 Surface(
-                                    color = MaterialTheme.colorScheme.surfaceVariant, // Theme Variant
+                                    color = MaterialTheme.colorScheme.primaryContainer, // Theme Variant
                                     shape = RoundedCornerShape(50),
                                     modifier = Modifier.height(50.dp)
                                 ) {

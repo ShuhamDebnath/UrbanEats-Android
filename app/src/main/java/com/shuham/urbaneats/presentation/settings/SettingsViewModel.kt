@@ -23,6 +23,12 @@ data class SettingsState(
     val isUpdating: Boolean = false
 )
 
+sealed interface SettingsEffect {
+    data class ShowToast(val message: String) : SettingsEffect
+    data object CloseProfileDialog : SettingsEffect
+    data object ClosePasswordDialog : SettingsEffect
+}
+
 class SettingsViewModel(
     private val tokenManager: TokenManager,
     private val userRepository: UserRepository
@@ -77,17 +83,18 @@ class SettingsViewModel(
     fun updateProfile(name: String, base64Image: String?) {
         viewModelScope.launch {
             _state.update { it.copy(isUpdating = true) }
-            // In a real app, show loading state here
+
             val result = userRepository.updateProfile(name, base64Image)
 
-            _state.update { it.copy(isUpdating = false) } // Stop Loading
+            _state.update { it.copy(isUpdating = false) }
 
             when (result) {
                 is NetworkResult.Success -> {
                     _effect.send(SettingsEffect.ShowToast("Profile updated successfully"))
+                    _effect.send(SettingsEffect.CloseProfileDialog) // <--- SIGNAL UI TO CLOSE
                 }
                 is NetworkResult.Error -> {
-                    _effect.send(SettingsEffect.ShowToast(result.message ?: "Failed to update profile"))
+                    _effect.send(SettingsEffect.ShowToast(result.message ?: "Failed to update"))
                 }
                 else -> {}
             }
@@ -96,25 +103,19 @@ class SettingsViewModel(
 
     // Use a Channel for one-time events like "Password Changed Successfully" or Error Toast
 
-
     fun changePassword(oldPass: String, newPass: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isUpdating = true) }
+            // Add loading state here too if desired
             val result = userRepository.changePassword(oldPass, newPass)
-            _state.update { it.copy(isUpdating = false) }
             when (result) {
                 is NetworkResult.Success -> {
-                    _effect.send(SettingsEffect.ShowToast("Password updated successfully"))
+                    _effect.send(SettingsEffect.ShowToast("Password updated"))
+                    _effect.send(SettingsEffect.ClosePasswordDialog)
                 }
-                is NetworkResult.Error -> {
-                    _effect.send(SettingsEffect.ShowToast(result.message ?: "Failed to update password"))
-                }
+                is NetworkResult.Error -> _effect.send(SettingsEffect.ShowToast(result.message ?: "Failed"))
                 else -> {}
             }
         }
     }
 }
 
-sealed interface SettingsEffect {
-    data class ShowToast(val message: String) : SettingsEffect
-}
